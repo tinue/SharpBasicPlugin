@@ -29,9 +29,15 @@ public class KeywordRegistry {
             // Register abbreviation if different from full name
             String rawAbbrev = keyword.getRawAbbreviation();
             if (!rawAbbrev.equals(keyword.getName())) {
-                KEYWORD_MAP.put(rawAbbrev.toUpperCase(), keyword);
-                // Also register with dot suffix
+                // Only register abbreviation WITH dot suffix to distinguish from variables
+                // E.g., "R." is RUN keyword, but "R" is a variable
                 KEYWORD_MAP.put((rawAbbrev + ".").toUpperCase(), keyword);
+
+                // Multi-character abbreviations (2+ chars) can also be recognized without dot
+                // E.g., "PR" for PRINT, "GOS" for GOSUB
+                if (rawAbbrev.length() >= 2) {
+                    KEYWORD_MAP.put(rawAbbrev.toUpperCase(), keyword);
+                }
             }
         }
     }

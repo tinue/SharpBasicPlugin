@@ -3,7 +3,7 @@ package ch.erzberger.sharpbasic.parser;
 import ch.erzberger.sharpbasic.SharpBasicLanguage;
 import ch.erzberger.sharpbasic.lexer.SharpBasicLexerAdapter;
 import ch.erzberger.sharpbasic.psi.SharpBasicFile;
-import ch.erzberger.sharpbasic.psi.SharpBasicTokenType;
+import ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.ParserDefinition;
 import com.intellij.lang.PsiParser;
@@ -27,11 +27,11 @@ public class SharpBasicParserDefinition implements ParserDefinition {
     );
 
     public static final TokenSet COMMENTS = TokenSet.create(
-            new SharpBasicTokenType("COMMENT")
+            SharpBasicTokenTypes.COMMENT
     );
 
     public static final TokenSet STRINGS = TokenSet.create(
-            new SharpBasicTokenType("STRING")
+            SharpBasicTokenTypes.STRING
     );
 
     @NotNull

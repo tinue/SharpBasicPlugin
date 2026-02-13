@@ -6,6 +6,7 @@ import ch.erzberger.sharpbasic.keywords.KeywordCategory;
 import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
 import ch.erzberger.sharpbasic.keywords.KeywordType;
 import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.util.ProcessingContext;
@@ -50,15 +51,16 @@ public class SharpBasicCompletionContributor extends CompletionContributor {
             element = element.withTypeText(categoryText, true);
 
             // Set priority based on category (PC-1500 core first)
+            double priority = 0.0;
             if (keyword.getCategory() == KeywordCategory.PC1500_CORE) {
-                element = element.withPriority(100);
+                priority = 100.0;
             } else if (keyword.getCategory() == KeywordCategory.CE150_EXTENSION) {
-                element = element.withPriority(50);
+                priority = 50.0;
             } else {
-                element = element.withPriority(25);
+                priority = 25.0;
             }
 
-            result.addElement(element);
+            result.addElement(PrioritizedLookupElement.withPriority(element, priority));
 
             // Also add abbreviation as a separate completion if it's different
             if (!abbrev.equals(keyword.getName()) && !abbrev.endsWith(".")) {
@@ -69,15 +71,16 @@ public class SharpBasicCompletionContributor extends CompletionContributor {
                         .withTailText(" → " + keyword.getName(), true)
                         .withTypeText(categoryText, true);
 
+                double abbrevPriority = 0.0;
                 if (keyword.getCategory() == KeywordCategory.PC1500_CORE) {
-                    abbrevElement = abbrevElement.withPriority(90);
+                    abbrevPriority = 90.0;
                 } else if (keyword.getCategory() == KeywordCategory.CE150_EXTENSION) {
-                    abbrevElement = abbrevElement.withPriority(40);
+                    abbrevPriority = 40.0;
                 } else {
-                    abbrevElement = abbrevElement.withPriority(20);
+                    abbrevPriority = 20.0;
                 }
 
-                result.addElement(abbrevElement);
+                result.addElement(PrioritizedLookupElement.withPriority(abbrevElement, abbrevPriority));
             }
         }
     }

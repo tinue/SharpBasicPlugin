@@ -1,7 +1,7 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.17.2"
-    id("org.jetbrains.grammarkit") version "2022.3.2"
+    id("org.jetbrains.intellij.platform") version "2.11.0"
+    id("org.jetbrains.grammarkit") version "2022.3.2.1"
 }
 
 group = properties["pluginGroup"]!!
@@ -9,19 +9,40 @@ version = properties["pluginVersion"]!!
 
 repositories {
     mavenCentral()
+
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 // Configure Java to match IntelliJ requirements
+// Build with Java 21, but compile to Java 17 bytecode for compatibility with IntelliJ 2023.2
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
-// Configure Gradle IntelliJ Plugin
-intellij {
-    version.set(properties["platformVersion"] as String)
-    type.set(properties["platformType"] as String)
-    plugins.set(listOf())
+dependencies {
+    intellijPlatform {
+        create(properties["platformType"] as String, properties["platformVersion"] as String)
+
+        // Required dependencies
+        instrumentationTools()
+    }
+}
+
+// Configure IntelliJ Platform
+intellijPlatform {
+    buildSearchableOptions = false
+
+    pluginConfiguration {
+        version = properties["pluginVersion"] as String
+
+        ideaVersion {
+            sinceBuild = "232"
+            untilBuild = "242.*"
+        }
+    }
 }
 
 // Configure Grammar-Kit
@@ -34,18 +55,8 @@ sourceSets {
 }
 
 tasks {
-    patchPluginXml {
-        version.set(properties["pluginVersion"] as String)
-        sinceBuild.set("232")
-        untilBuild.set("242.*")
-    }
-
     compileJava {
         options.encoding = "UTF-8"
-    }
-
-    buildSearchableOptions {
-        enabled = false
     }
 
     generateLexer {
