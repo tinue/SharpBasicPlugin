@@ -1,0 +1,124 @@
+{
+  parserClass="ch.erzberger.sharpbasic.parser.SharpBasicParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="SharpBasic"
+  psiImplClassSuffix="Impl"
+  psiPackage="ch.erzberger.sharpbasic.psi"
+  psiImplPackage="ch.erzberger.sharpbasic.psi.impl"
+
+  elementTypeHolderClass="ch.erzberger.sharpbasic.psi.SharpBasicTypes"
+  elementTypeClass="ch.erzberger.sharpbasic.psi.SharpBasicElementType"
+  tokenTypeClass="ch.erzberger.sharpbasic.psi.SharpBasicTokenType"
+
+  tokens = [
+    LINE_NUMBER='regexp:[0-9]+'
+    NUMBER='regexp:[0-9]+(\.[0-9]+)?([Ee][+\-]?[0-9]+)?'
+    STRING='regexp:"([^"\r\n]|"")*"'
+    IDENTIFIER='regexp:[A-Za-z][A-Za-z0-9]*\$?'
+    KEYWORD='regexp:[A-Za-z]+\.?'
+    COMMENT='regexp:REM[^\r\n]*'
+
+    PLUS='+'
+    MINUS='-'
+    MULT='*'
+    DIV='/'
+    POWER='^'
+    EQ='='
+    LT='<'
+    GT='>'
+    LE='<='
+    GE='>='
+    NE='<>'
+    LPAREN='('
+    RPAREN=')'
+    COMMA=','
+    SEMICOLON=';'
+    COLON=':'
+    HASH='#'
+
+    LINE_TERMINATOR='regexp:\r\n|\r|\n'
+  ]
+}
+
+file ::= line*
+
+line ::= LINE_NUMBER? statement_list? LINE_TERMINATOR?
+
+statement_list ::= statement (COLON statement)*
+
+statement ::= print_stmt
+            | for_stmt
+            | next_stmt
+            | if_stmt
+            | goto_stmt
+            | gosub_stmt
+            | return_stmt
+            | input_stmt
+            | let_stmt
+            | dim_stmt
+            | data_stmt
+            | read_stmt
+            | rem_stmt
+            | end_stmt
+            | other_stmt
+            | expression
+
+print_stmt ::= KEYWORD expression_list?
+
+for_stmt ::= KEYWORD IDENTIFIER EQ expression KEYWORD expression (KEYWORD expression)?
+
+next_stmt ::= KEYWORD IDENTIFIER?
+
+if_stmt ::= KEYWORD expression KEYWORD (statement | LINE_NUMBER)
+
+goto_stmt ::= KEYWORD LINE_NUMBER
+
+gosub_stmt ::= KEYWORD LINE_NUMBER
+
+return_stmt ::= KEYWORD
+
+input_stmt ::= KEYWORD (STRING (COMMA | SEMICOLON))? variable_list
+
+let_stmt ::= (KEYWORD)? IDENTIFIER EQ expression
+
+dim_stmt ::= KEYWORD variable_list
+
+data_stmt ::= KEYWORD expression_list
+
+read_stmt ::= KEYWORD variable_list
+
+rem_stmt ::= COMMENT
+
+end_stmt ::= KEYWORD
+
+other_stmt ::= KEYWORD expression_list?
+
+expression_list ::= expression (COMMA expression | SEMICOLON expression)*
+
+variable_list ::= IDENTIFIER (COMMA IDENTIFIER)*
+
+expression ::= logical_expr
+
+logical_expr ::= comparison_expr (logical_op comparison_expr)*
+
+logical_op ::= KEYWORD  // AND, OR
+
+comparison_expr ::= additive_expr (comparison_op additive_expr)*
+
+comparison_op ::= EQ | LT | GT | LE | GE | NE
+
+additive_expr ::= multiplicative_expr ((PLUS | MINUS) multiplicative_expr)*
+
+multiplicative_expr ::= power_expr ((MULT | DIV) power_expr)*
+
+power_expr ::= unary_expr (POWER unary_expr)*
+
+unary_expr ::= (PLUS | MINUS | KEYWORD)? primary_expr  // KEYWORD for NOT
+
+primary_expr ::= NUMBER
+               | STRING
+               | IDENTIFIER (LPAREN expression_list? RPAREN)?  // Variable or function call
+               | KEYWORD (LPAREN expression_list? RPAREN)?     // Keyword function
+               | LPAREN expression RPAREN

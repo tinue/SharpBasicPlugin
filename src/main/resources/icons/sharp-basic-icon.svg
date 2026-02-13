@@ -1,0 +1,10 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="16" height="16" fill="#4A90E2" rx="2"/>
+
+    <!-- "PC" text in white -->
+    <text x="8" y="6" font-family="monospace" font-size="5" font-weight="bold" fill="white" text-anchor="middle">PC</text>
+
+    <!-- "1500" text in white -->
+    <text x="8" y="12" font-family="monospace" font-size="4" fill="white" text-anchor="middle">1500</text>
+</svg>

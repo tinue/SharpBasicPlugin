@@ -1,0 +1,46 @@
+<idea-plugin>
+    <id>ch.erzberger.sharpbasic</id>
+    <name>Sharp PC-1500 BASIC</name>
+    <vendor email="contact@erzberger.ch" url="https://github.com/erzberger/SharpBasicPlugin">Erzberger</vendor>
+
+    <description><![CDATA[
+    <p>Language support for Sharp PC-1500 BASIC, a vintage programming language from the 1980s Sharp pocket computer.</p>
+    <p>Features:</p>
+    <ul>
+        <li>Syntax highlighting for Sharp BASIC keywords, strings, numbers, and comments</li>
+        <li>Code completion with full and abbreviated keyword forms</li>
+        <li>Support for PC-1500 core commands (97 keywords)</li>
+        <li>Support for CE-150 graphics/printer extension (14 keywords)</li>
+        <li>Support for CE-158 communications extension (11 keywords)</li>
+        <li>File type recognition for .bas and .pc1500 files</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- File Type -->
+        <fileType
+            name="Sharp BASIC"
+            implementationClass="ch.erzberger.sharpbasic.SharpBasicFileType"
+            fieldName="INSTANCE"
+            language="SharpBasic"
+            extensions="bas;pc1500"/>
+
+        <!-- Parser -->
+        <lang.parserDefinition
+            language="SharpBasic"
+            implementationClass="ch.erzberger.sharpbasic.parser.SharpBasicParserDefinition"/>
+
+        <!-- Syntax Highlighter -->
+        <lang.syntaxHighlighterFactory
+            language="SharpBasic"
+            implementationClass="ch.erzberger.sharpbasic.syntax.SharpBasicSyntaxHighlighterFactory"/>
+
+        <!-- Code Completion -->
+        <completion.contributor
+            language="SharpBasic"
+            implementationClass="ch.erzberger.sharpbasic.completion.SharpBasicCompletionContributor"/>
+    </extensions>
+</idea-plugin>
