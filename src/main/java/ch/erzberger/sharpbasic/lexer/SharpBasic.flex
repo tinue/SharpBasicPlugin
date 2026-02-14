@@ -90,13 +90,6 @@ APOSTROPHE = '
   // Strings
   {STRING}                { atLineStart = false; return STRING; }
 
-  // Comment detection - REM keyword (case-sensitive: uppercase only)
-  {COMMENT_START} ({WHITE_SPACE} | {LINE_TERMINATOR})? {
-    atLineStart = false;
-    yybegin(IN_COMMENT);
-    return KEYWORD;  // Return KEYWORD for syntax highlighting, but enter comment mode
-  }
-
   // Comment detection - single quote/apostrophe (alternative to REM)
   {APOSTROPHE} {
     atLineStart = false;
@@ -105,6 +98,7 @@ APOSTROPHE = '
   }
 
   // Identifiers and keywords (including those with $ suffix like INKEY$)
+  // Note: REM is handled here via greedy keyword matching, not as a separate pattern
   {IDENTIFIER} ({PERIOD})? {
     atLineStart = false;
     String text = yytext().toString();
@@ -171,6 +165,47 @@ APOSTROPHE = '
             yypushback(pushBackCount);
           }
           return KEYWORD;
+        }
+      }
+    }
+
+    // Even if the whole identifier isn't uppercase, check for uppercase prefix keywords
+    // This handles cases like "REMThisisatest" where "REM" is uppercase but "Thisisatest" is mixed case
+    if (!isAllUppercase) {
+      // Find the length of the uppercase prefix
+      int uppercasePrefixLen = 0;
+      for (int i = 0; i < textWithoutDollar.length(); i++) {
+        if (Character.isUpperCase(textWithoutDollar.charAt(i))) {
+          uppercasePrefixLen = i + 1;
+        } else {
+          break;
+        }
+      }
+
+      // Try to match keywords in the uppercase prefix (minimum 2 chars for a keyword)
+      if (uppercasePrefixLen >= 2) {
+        String uppercasePrefix = text.substring(0, uppercasePrefixLen).toUpperCase();
+        int maxKeywordLength = Math.min(uppercasePrefix.length(), 8);
+        for (int len = maxKeywordLength; len >= 2; len--) {
+          String candidate = uppercasePrefix.substring(0, len);
+          if (KeywordRegistry.isKeyword(candidate)) {
+            // Special case: REM is a comment keyword
+            if (candidate.equals("REM")) {
+              int pushBackCount = text.length() - len;
+              if (pushBackCount > 0) {
+                yypushback(pushBackCount);
+              }
+              yybegin(IN_COMMENT);
+              return KEYWORD;
+            }
+
+            // Found a keyword! Push back the rest for re-lexing
+            int pushBackCount = text.length() - len;
+            if (pushBackCount > 0) {
+              yypushback(pushBackCount);
+            }
+            return KEYWORD;
+          }
         }
       }
     }

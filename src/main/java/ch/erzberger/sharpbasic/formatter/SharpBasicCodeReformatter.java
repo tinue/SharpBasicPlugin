@@ -122,13 +122,8 @@ public class SharpBasicCodeReformatter {
         String restOfLine = line;
 
         if (lineNumber > 0) {
-            // Right-align line number
-            String lineNumStr = String.valueOf(lineNumber);
-            int padding = maxLineNumberWidth - lineNumStr.length() + 2; // +2 for leading spaces
-            for (int i = 0; i < padding; i++) {
-                result.append(' ');
-            }
-            result.append(lineNumStr);
+            // Output line number with single trailing space (no leading spaces)
+            result.append(lineNumber);
             result.append(' ');
 
             // Remove the consumed characters (line number with spaces)
