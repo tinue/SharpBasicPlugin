@@ -35,17 +35,20 @@ Then reload the Gradle project: **View → Tool Windows → Gradle → 🔄 Relo
 
 The project won't compile yet because generated files are missing. You need to generate them:
 
-**Method A: Via Gradle Tool Window** (Recommended)
-1. Open: **View → Tool Windows → Gradle**
-2. Navigate to: `SharpBasicPlugin → Tasks → other`
-3. Double-click **generateLexer** (wait for it to complete)
-4. Double-click **generateParser** (wait for it to complete)
-5. Right-click project root → **Reload from Disk**
-
-**Method B: Via Terminal**
+**Method A: Via Terminal** (Recommended - Most Reliable)
 ```bash
 ./gradlew generateLexer generateParser
 ```
+After completion, right-click project root → **Reload from Disk**
+
+**Method B: Via Gradle Tool Window**
+1. Open: **View → Tool Windows → Gradle**
+2. Click the **Execute Gradle Task** button (⚙️ icon or elephant icon) at the top
+3. Type: `generateLexer` and press Enter (wait for completion)
+4. Type: `generateParser` and press Enter (wait for completion)
+5. Right-click project root → **Reload from Disk**
+
+**Alternative:** If you see the tasks in the Gradle window tree (they may appear at the root level or under various categories), you can double-click them directly.
 
 ### 5. Build the Project
 
@@ -99,9 +102,25 @@ gradle wrapper --gradle-version 8.5
 
 ### "Java version mismatch"
 
-**Solution**: Set Project SDK to Java 17:
+**Solution**: Set Project SDK to Java 21:
+
+⚠️ **IMPORTANT**: Use Java 21. Java 25 is NOT compatible with Gradle 8.5.
+
 1. **File → Project Structure → Project**
-2. Set **SDK** to Java 17 (or download if missing)
+2. Set **SDK** to Java 21 (or download if missing)
+3. If you have Java 25 installed, make sure to select Java 21 instead
+
+### "Invalid Gradle JDK configuration found"
+
+**Solution**: Configure the Gradle JDK to Java 21:
+
+⚠️ **IMPORTANT**: Use Java 21. Java 25 is NOT compatible with Gradle 8.5.
+
+1. **File → Settings → Build, Execution, Deployment → Build Tools → Gradle** (on Mac: **IntelliJ IDEA → Settings**)
+2. Under **Gradle JDK**, select **Java 21**
+3. If Java 21 is not available, click **Download JDK** and select version 21
+4. **Avoid Java 25** - it will cause Gradle build failures
+5. Click **OK** and let IntelliJ reload the Gradle project
 
 ### "Plugin requires IntelliJ 2023.2 or later"
 

@@ -2,9 +2,11 @@
 
 ## Prerequisites
 
-- **Java Development Kit (JDK) 17 or higher**
-  - Download from [Adoptium](https://adoptium.net/) or use your system package manager
-  - Verify installation: `java -version`
+- **Java Development Kit (JDK) 21** ⚠️ **IMPORTANT**
+  - **Use Java 21 (recommended)** - This project is configured for Java 21
+  - **Java 25 is NOT compatible** with Gradle 8.5 and will cause build failures
+  - Download Java 21 from [Adoptium](https://adoptium.net/)
+  - Verify installation: `java -version` (should show version 21.x.x)
 
 - **IntelliJ IDEA** (for development and testing)
   - Community Edition or Ultimate Edition 2023.2+

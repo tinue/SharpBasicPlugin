@@ -109,9 +109,26 @@ public class ReformatAsCompactPC1500Action extends AnAction {
     @Override
     public void update(@NotNull AnActionEvent e) {
         // Enable only for Sharp BASIC files
+        // Try multiple ways to get file type for compatibility with different IDE contexts
+        boolean enabled = false;
+
+        // Method 1: Try PSI file
         PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
-        boolean enabled = psiFile != null && psiFile.getFileType() == SharpBasicFileType.INSTANCE;
-        LOG.info("Action update: enabled=" + enabled + ", fileType=" + (psiFile != null ? psiFile.getFileType() : "null"));
+        if (psiFile != null && psiFile.getFileType() == SharpBasicFileType.INSTANCE) {
+            enabled = true;
+        }
+
+        // Method 2: Try virtual file if PSI not available
+        if (!enabled) {
+            VirtualFile virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE);
+            if (virtualFile != null) {
+                String extension = virtualFile.getExtension();
+                enabled = "bas".equalsIgnoreCase(extension) || "pc1500".equalsIgnoreCase(extension);
+            }
+        }
+
+        LOG.info("Action update: enabled=" + enabled + ", psiFile=" + (psiFile != null) +
+                 ", fileType=" + (psiFile != null ? psiFile.getFileType() : "null"));
         e.getPresentation().setEnabledAndVisible(enabled);
     }
 

@@ -45,7 +45,7 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = "232"
-            untilBuild = "242.*"
+            // No untilBuild restriction - allow all future IDE versions
         }
     }
 }

@@ -205,7 +205,7 @@ See the `examples/` directory for sample programs:
 
 ### Prerequisites
 
-- Java 17 or higher
+- **Java 21** (recommended) ⚠️ **Note:** Java 25 is NOT compatible with Gradle 8.5
 - IntelliJ IDEA 2023.2 or higher (for development)
 
 ### Building from Source
@@ -221,6 +221,15 @@ cd SharpBasicPlugin
 # Run in sandbox IDE for testing
 ./gradlew runIde
 ```
+
+### Architecture Guide
+
+**New to plugin development?** See [PLUGIN_ARCHITECTURE.md](PLUGIN_ARCHITECTURE.md) for a comprehensive guide that explains:
+- Lexing and parsing concepts from scratch
+- How IntelliJ plugins work
+- Detailed explanation of every package and file in this project
+- End-to-end flow examples (e.g., how syntax highlighting works)
+- How to add new features
 
 ### Project Structure
 
