@@ -6,7 +6,7 @@
 
 1. Launch IntelliJ IDEA
 2. Click **Open** (or File → Open)
-3. Navigate to: `/Users/me/Development/sharp/SharpBasicPlugin`
+3. Navigate to the directory where you cloned/checked out the `SharpBasicPlugin` project
 4. Click **Open**
 
 ### 2. Import Gradle Project

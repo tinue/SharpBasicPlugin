@@ -347,8 +347,8 @@ These are documented as future enhancements in the README.md.
 ## References Used
 
 1. **Existing Code**:
-   - `BasicKeyword.java` from `/Users/me/Development/sharp/sharp-pocket-computer/`
-   - `SharpPc1500BasicKeywords.java` from `/Users/me/Development/sharp/SharpBasicReference/`
+   - `BasicKeyword.java` from [SharpCommunicator](https://github.com/tinue/sharp-pocket-computer/SharpCommunicator)
+   - `SharpPc1500BasicKeywords.java` from [SharpBasicReference](https://github.com/tinue/SharpBasicReference)
 
 2. **Documentation**:
    - IntelliJ Custom Language Support Guide

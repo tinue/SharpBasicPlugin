@@ -99,6 +99,51 @@ Always use **Reformat as PC-1500 BASIC** instead for authentic PC-1500 formattin
 15 FOR I=1TO 10:NEXT I
 ```
 
+#### Reformat as Compact PC-1500 BASIC
+
+The plugin also provides a **compact formatter** specifically designed for use with PC-1500 emulators like **PockEmul**.
+
+**Purpose:**
+Emulators can only enter code via the emulated keyboard (automatically from a file). The PC-1500 has a limited input buffer, and long code lines often cannot be entered in one operation. On real hardware, you would enter part of the line, press Enter (the PC-1500 tokenizes and stores it, freeing buffer space), then enter the rest. Emulators cannot do this split-entry process.
+
+The compact formatter minimizes code size to maximize the chance that lines fit in the input buffer in one go:
+- **No spaces** (except in strings)
+- **Abbreviated keywords** (e.g., `P.` instead of `PRINT`, `G.` instead of `GOTO`)
+- **Comments preserved** (REM and apostrophe comments kept - you can manually shorten them after seeing the 80-char margin)
+
+**How to use:**
+- Right-click in the editor → **Reformat as Compact PC-1500 BASIC**
+- Or use the **Code** menu → **Reformat as Compact PC-1500 BASIC**
+- Keyboard shortcut: `Ctrl+Alt+Shift+C` (`Cmd+Alt+Shift+C` on Mac)
+
+**Important:**
+- The compact formatter **always creates a scratch file** and never overwrites your original source
+- A **visual right margin at 79 characters** is automatically displayed in the compact scratch file
+- This margin shows the PC-1500 input buffer limit - lines extending beyond may still need manual splitting for emulator entry
+
+**Example:**
+```basic
+# Before (readable source)
+10 PRINT "Hello World"
+20 REM This is a comment
+30 FOR I=1 TO 100
+40   PRINT I
+50 NEXT I
+
+# After (compact for emulator)
+10P."Hello World"
+20REMThis is a comment
+30F.I=1TO.100
+40P.I
+50N.I
+```
+
+Note: Comments are kept but compacted. Use the 80-character margin to identify and manually shorten remarks that are too long.
+
+**Scratch file naming:**
+- Original: `myprogram.bas`
+- Compact version: `myprogram_compact.bas` (opened in new tab)
+
 ### Syntax Highlighting Colors
 
 - **Keywords**: Bold blue (e.g., `PRINT`, `FOR`, `IF`)
@@ -219,6 +264,8 @@ MIT License - see LICENSE file for details
 - Sharp Corporation for the original PC-1500 pocket computer
 - JetBrains for the IntelliJ Platform SDK
 - The vintage computing community for preserving Sharp BASIC documentation
+- [SharpCommunicator](https://github.com/tinue/sharp-pocket-computer/SharpCommunicator) project for Sharp pocket computer tools and documentation
+- This plugin was developed with AI coding assistance using Claude (Anthropic)
 
 ## Version History
 

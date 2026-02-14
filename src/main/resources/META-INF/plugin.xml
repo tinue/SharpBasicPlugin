@@ -59,5 +59,15 @@
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift F"/>
         </action>
+
+        <!-- Reformat as Compact PC-1500 BASIC action -->
+        <action id="SharpBasic.ReformatAsCompactPC1500"
+                class="ch.erzberger.sharpbasic.formatter.ReformatAsCompactPC1500Action"
+                text="Reformat as Compact PC-1500 BASIC"
+                description="Compact code by removing spaces, comments, and using abbreviations">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift C"/>
+        </action>
     </actions>
 </idea-plugin>
