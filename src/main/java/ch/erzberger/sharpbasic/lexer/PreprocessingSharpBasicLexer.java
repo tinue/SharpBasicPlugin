@@ -144,17 +144,18 @@ public class PreprocessingSharpBasicLexer extends LexerBase {
                 // PC-1500 is case-sensitive: only recognize uppercase REM
                 if (c == 'R') {  // Only uppercase R
                     // Check for "R E M" with spaces OR "REM" without spaces
+                    // PC-1500 is case-sensitive: only uppercase REM is a keyword
                     int pos = i + 1;
                     while (pos < input.length() && (input.charAt(pos) == ' ' || input.charAt(pos) == '\t')) {
                         pos++;
                     }
-                    if (pos < input.length() && (input.charAt(pos) == 'E' || input.charAt(pos) == 'e')) {
+                    if (pos < input.length() && input.charAt(pos) == 'E') {  // Only uppercase E
                         int ePos = pos;
                         pos++;
                         while (pos < input.length() && (input.charAt(pos) == ' ' || input.charAt(pos) == '\t')) {
                             pos++;
                         }
-                        if (pos < input.length() && (input.charAt(pos) == 'M' || input.charAt(pos) == 'm')) {
+                        if (pos < input.length() && input.charAt(pos) == 'M') {  // Only uppercase M
                             // Found "R E M" with spaces - collapse to "REM"
                             result.append("REM");
                             preprocToOrig[preprocessedPos++] = i;

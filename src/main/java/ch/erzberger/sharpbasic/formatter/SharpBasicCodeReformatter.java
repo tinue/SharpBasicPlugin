@@ -39,6 +39,10 @@ public class SharpBasicCodeReformatter {
      */
     public static String reformat(String code) {
         StringBuilder result = new StringBuilder();
+
+        // Detect line ending style from the original code
+        String lineEnding = detectLineEnding(code);
+
         String[] lines = code.split("\\r\\n|\\r|\\n");
 
         // First pass: find maximum line number width
@@ -55,18 +59,44 @@ public class SharpBasicCodeReformatter {
         }
 
         // Format each line
-        for (String line : lines) {
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
             String trimmed = line.trim();
             if (trimmed.isEmpty()) {
-                result.append("\r");
+                // Only append line ending if not the last line
+                if (i < lines.length - 1) {
+                    result.append(lineEnding);
+                }
                 continue;
             }
 
             String formattedLine = reformatLine(trimmed, maxLineNumberWidth);
-            result.append(formattedLine).append("\r");
+            result.append(formattedLine);
+
+            // Only append line ending if not the last line
+            if (i < lines.length - 1) {
+                result.append(lineEnding);
+            }
         }
 
         return result.toString();
+    }
+
+    /**
+     * Detects the line ending style used in the code.
+     * Returns "\r\n" (CRLF), "\r" (CR), or "\n" (LF).
+     * Defaults to system line separator if no line endings found.
+     */
+    private static String detectLineEnding(String code) {
+        if (code.contains("\r\n")) {
+            return "\r\n";  // Windows CRLF
+        } else if (code.contains("\r")) {
+            return "\r";     // Old Mac CR
+        } else if (code.contains("\n")) {
+            return "\n";     // Unix/Mac LF
+        }
+        // No line endings found, use system default
+        return System.lineSeparator();
     }
 
     /**
@@ -211,99 +241,20 @@ public class SharpBasicCodeReformatter {
 
     /**
      * Determines the spacing between two tokens according to PC-1500 rules.
+     * PC-1500 formatting is simple: only add space AFTER certain tokens, never BEFORE.
      */
     private static String getSpacingBetween(TokenInfo current, TokenInfo next) {
         String type1 = current.type.toString();
-        String type2 = next.type.toString();
-        String text1 = current.text;
 
-        // No space before colon
-        if (isType(type2, "COLON")) {
-            return "";
-        }
-
-        // No space after colon, except before certain keywords
-        if (isType(type1, "COLON")) {
-            // Space after colon only before specific keywords like REM, NEXT, etc.
-            if (isType(type2, "KEYWORD") && (next.text.equalsIgnoreCase("REM") ||
-                                              next.text.equalsIgnoreCase("NEXT"))) {
-                return "";
-            }
-            return "";
-        }
-
-        // Space BEFORE comparison operators (not after) - check this first!
-        if (isComparisonOperator(type2)) {
-            // Add space before comparison operator if previous was identifier, keyword, or string
-            if (isType(type1, "IDENTIFIER") || isType(type1, "KEYWORD") ||
-                isType(type1, "STRING") || isType(type1, "NUMBER") ||
-                isType(type1, "RPAREN")) {
-                return " ";
-            }
-        }
-
-        // Space after keyword, but context-dependent
+        // Rule 1: ALWAYS space after keyword
         if (isType(type1, "KEYWORD")) {
-            // No space before comma or semicolon
-            if (isType(type2, "COMMA") || isType(type2, "SEMICOLON")) {
-                return "";
-            }
-            // Space before opening paren (function calls like "INT (")
-            if (isType(type2, "LPAREN")) {
-                return " ";
-            }
-            // Space before line numbers after GOTO/GOSUB/THEN
-            if (isType(type2, "LINE_NUMBER")) {
-                return " ";
-            }
-            // No space before = or arithmetic operators
-            if (isType(type2, "EQ") || isArithmeticOperator(type2)) {
-                return "";
-            }
-            // Space before identifiers, strings, etc.
             return " ";
         }
 
-        // No space AFTER comparison operators
-        if (isComparisonOperator(type1)) {
-            return "";
-        }
-
-        // Space BEFORE specific keywords (like THEN, STEP) after numbers, identifiers, or operators
-        if (isType(type2, "KEYWORD")) {
-            // Space before THEN after comparison
-            if (next.text.equalsIgnoreCase("THEN")) {
-                if (isType(type1, "NUMBER") || isType(type1, "IDENTIFIER") ||
-                    isType(type1, "STRING") || isType(type1, "RPAREN")) {
-                    return " ";
-                }
-            }
-            // No space before TO, REM, GOTO in most contexts
-            // They get handled by the keyword-after-keyword rule
-        }
-
-        // No space around = in assignments
-        if (isType(type1, "EQ") || isType(type2, "EQ")) {
-            return "";
-        }
-
-        // No space before/after comma
-        if (isType(type2, "COMMA") || isType(type1, "COMMA")) {
-            return "";
-        }
-
-        // No space around arithmetic operators
-        if (isArithmeticOperator(type1) || isArithmeticOperator(type2)) {
-            return "";
-        }
-
-        // No space around parentheses (except keyword before LPAREN handled above)
-        if (isType(type1, "LPAREN") || isType(type2, "LPAREN") ||
-            isType(type1, "RPAREN") || isType(type2, "RPAREN")) {
-            return "";
-        }
+        // Rule 2: Space after line number (handled in reformatLine, not here)
 
         // Default: no space
+        // PC-1500 never adds space BEFORE anything
         return "";
     }
 

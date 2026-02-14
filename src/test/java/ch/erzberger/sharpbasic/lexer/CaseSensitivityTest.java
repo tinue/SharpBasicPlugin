@@ -1,6 +1,6 @@
 package ch.erzberger.sharpbasic.lexer;
 
-import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
+import ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes;
 import com.intellij.psi.tree.IElementType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ class CaseSensitivityTest {
         String tokenText = "REM test".substring(lexer.getTokenStart(), lexer.getTokenEnd());
         System.out.println("Token type for 'REM': " + tokenType);
         System.out.println("Token text: '" + tokenText + "'");
-        assertEquals(SharpBasicTypes.KEYWORD, tokenType, "REM should be recognized as KEYWORD");
+        assertEquals(SharpBasicTokenTypes.KEYWORD, tokenType, "REM should be recognized as KEYWORD");
     }
 
     @Test
@@ -41,17 +41,17 @@ class CaseSensitivityTest {
         IElementType tokenType = lexer.getTokenType();
         System.out.println("Preprocessing Lexer - Token type for 'rem': " + tokenType);
 
-        assertEquals(SharpBasicTypes.IDENTIFIER, tokenType, "rem should be recognized as IDENTIFIER, not KEYWORD");
+        assertEquals(SharpBasicTokenTypes.IDENTIFIER, tokenType, "rem should be recognized as IDENTIFIER, not KEYWORD");
     }
 
     @Test
-    @DisplayName("Mixed case Rem is recognized as keyword")
+    @DisplayName("Mixed case Rem is NOT recognized as keyword")
     void testMixedCaseRem() throws IOException {
         PreprocessingSharpBasicLexer lexer = new PreprocessingSharpBasicLexer();
         lexer.start("Rem test", 0, 8, 0);
 
         IElementType tokenType = lexer.getTokenType();
         System.out.println("Token type for 'Rem': " + tokenType);
-        assertEquals(SharpBasicTypes.KEYWORD, tokenType, "Rem should be recognized as KEYWORD");
+        assertEquals(SharpBasicTokenTypes.IDENTIFIER, tokenType, "Rem should be recognized as IDENTIFIER, not KEYWORD");
     }
 }

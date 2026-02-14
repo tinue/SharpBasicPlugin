@@ -1,6 +1,8 @@
 package ch.erzberger.sharpbasic.formatter;
 
 import ch.erzberger.sharpbasic.SharpBasicFileType;
+import com.intellij.ide.scratch.ScratchFileService;
+import com.intellij.ide.scratch.ScratchRootType;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
@@ -11,7 +13,9 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +47,7 @@ public class ReformatAsPC1500Action extends AnAction {
 
         try {
             Document document = editor.getDocument();
+            VirtualFile virtualFile = psiFile.getVirtualFile();
             String currentText = document.getText();
             LOG.info("Current text length: " + currentText.length());
 
@@ -54,14 +59,43 @@ public class ReformatAsPC1500Action extends AnAction {
             // (IntelliJ will handle line ending conversion when saving)
             final String finalReformattedText = reformattedText.replace("\r", "\n");
 
-            // Apply the changes in a write action
-            WriteCommandAction.runWriteCommandAction(project, "Reformat as PC-1500 BASIC", null, () -> {
-                document.setText(finalReformattedText);
-                PsiDocumentManager.getInstance(project).commitDocument(document);
-            });
+            // Check if file is read-only (check VirtualFile, not Document)
+            if (virtualFile != null && !virtualFile.isWritable()) {
+                LOG.info("Document is read-only, creating scratch file with reformatted content");
 
-            showNotification(project, "Code reformatted as PC-1500 BASIC", NotificationType.INFORMATION);
-            LOG.info("Reformatting completed successfully");
+                // Create a scratch file with the reformatted content
+                String fileName = psiFile.getName();
+                String scratchFileName = fileName.replaceFirst("(\\.[^.]+)?$", "_formatted$1");
+
+                VirtualFile scratchFile = ScratchRootType.getInstance().createScratchFile(
+                    project,
+                    scratchFileName,
+                    SharpBasicFileType.INSTANCE.getLanguage(),
+                    finalReformattedText,
+                    ScratchFileService.Option.create_if_missing
+                );
+
+                if (scratchFile != null) {
+                    // Open the scratch file in the editor
+                    FileEditorManager.getInstance(project).openFile(scratchFile, true);
+                    showNotification(project,
+                        "File is read-only. Reformatted code opened in scratch file: " + scratchFileName,
+                        NotificationType.INFORMATION);
+                } else {
+                    showNotification(project,
+                        "Failed to create scratch file",
+                        NotificationType.ERROR);
+                }
+            } else {
+                // Apply the changes in a write action
+                WriteCommandAction.runWriteCommandAction(project, "Reformat as PC-1500 BASIC", null, () -> {
+                    document.setText(finalReformattedText);
+                    PsiDocumentManager.getInstance(project).commitDocument(document);
+                });
+
+                showNotification(project, "Code reformatted as PC-1500 BASIC", NotificationType.INFORMATION);
+                LOG.info("Reformatting completed successfully");
+            }
 
         } catch (Exception ex) {
             LOG.error("Error during reformatting", ex);

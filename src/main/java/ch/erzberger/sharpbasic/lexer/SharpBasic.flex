@@ -29,7 +29,7 @@ INTEGER = [0-9]+
 DECIMAL = [0-9]+ \. [0-9]+
 SCIENTIFIC = [0-9]+ (\. [0-9]+)? [Ee] [+\-]? [0-9]+
 STRING = \"([^\"\r\n]|\"\")*\"
-IDENTIFIER = [A-Za-z][A-Za-z0-9]*\$?
+IDENTIFIER = [A-Za-z][A-Za-z0-9]*[$#]?
 COMMENT_START = REM
 
 // Operators and separators
@@ -97,7 +97,7 @@ APOSTROPHE = '
     return COMMENT;
   }
 
-  // Identifiers and keywords (including those with $ suffix like INKEY$)
+  // Identifiers and keywords (including those with $ or # suffix like INKEY$, POKE#)
   // Note: REM is handled here via greedy keyword matching, not as a separate pattern
   {IDENTIFIER} ({PERIOD})? {
     atLineStart = false;
@@ -105,6 +105,7 @@ APOSTROPHE = '
     String textUpper = text.toUpperCase();
     boolean hasPeriod = text.endsWith(".");
     boolean hasDollar = !hasPeriod && text.endsWith("$");
+    boolean hasHash = !hasPeriod && text.endsWith("#");
 
     // Remove trailing period if present (for abbreviations)
     if (hasPeriod) {
@@ -112,9 +113,12 @@ APOSTROPHE = '
     }
 
     // PC-1500 is case-sensitive: only recognize ALL-UPPERCASE keywords
-    // Remove $ for checking (INKEY$ should check INKEY)
-    String textWithoutDollar = hasDollar ? text.substring(0, text.length() - 1) : text;
-    boolean isAllUppercase = textWithoutDollar.equals(textWithoutDollar.toUpperCase());
+    // Remove $ or # for case checking (INKEY$ should check INKEY, POKE# should check POKE)
+    String textWithoutSuffix = text;
+    if (hasDollar || hasHash) {
+      textWithoutSuffix = text.substring(0, text.length() - 1);
+    }
+    boolean isAllUppercase = textWithoutSuffix.equals(textWithoutSuffix.toUpperCase());
     if (isAllUppercase) {
       // Check if the entire token is a keyword (including $ suffix)
       if (KeywordRegistry.isKeyword(textUpper)) {
@@ -136,7 +140,7 @@ APOSTROPHE = '
 
       // Try to find the longest matching keyword from the start
       // This implements Sharp BASIC's greedy tokenization (e.g., "QAND" -> "Q" then retry "AND")
-      // For keywords with $, we need to check with the $ included
+      // For keywords with $ or #, we need to check with the suffix included
       int maxKeywordLength = Math.min(textUpper.length(), 8); // Keywords are max 8 chars
       for (int len = maxKeywordLength; len >= 2; len--) {
         String candidate = textUpper.substring(0, len);
@@ -174,8 +178,8 @@ APOSTROPHE = '
     if (!isAllUppercase) {
       // Find the length of the uppercase prefix
       int uppercasePrefixLen = 0;
-      for (int i = 0; i < textWithoutDollar.length(); i++) {
-        if (Character.isUpperCase(textWithoutDollar.charAt(i))) {
+      for (int i = 0; i < textWithoutSuffix.length(); i++) {
+        if (Character.isUpperCase(textWithoutSuffix.charAt(i))) {
           uppercasePrefixLen = i + 1;
         } else {
           break;
@@ -211,8 +215,8 @@ APOSTROPHE = '
     }
 
     // Not a keyword
-    // If it has a $ suffix and isn't a keyword, it's a string variable identifier
-    if (hasDollar) {
+    // If it has a $ or # suffix and isn't a keyword, it's a variable identifier
+    if (hasDollar || hasHash) {
       return IDENTIFIER;
     }
 
