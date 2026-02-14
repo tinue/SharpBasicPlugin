@@ -107,32 +107,45 @@ APOSTROPHE = '
     boolean hasDollar = !hasPeriod && text.endsWith("$");
     boolean hasHash = !hasPeriod && text.endsWith("#");
 
-    // Remove trailing period if present (for abbreviations)
-    if (hasPeriod) {
-      textUpper = textUpper.substring(0, textUpper.length() - 1);
-    }
-
     // PC-1500 is case-sensitive: only recognize ALL-UPPERCASE keywords
     // Remove $ or # for case checking (INKEY$ should check INKEY, POKE# should check POKE)
     String textWithoutSuffix = text;
     if (hasDollar || hasHash) {
       textWithoutSuffix = text.substring(0, text.length() - 1);
+    } else if (hasPeriod) {
+      textWithoutSuffix = text.substring(0, text.length() - 1);
     }
     boolean isAllUppercase = textWithoutSuffix.equals(textWithoutSuffix.toUpperCase());
+
     if (isAllUppercase) {
-      // Check if the entire token is a keyword (including $ suffix)
-      if (KeywordRegistry.isKeyword(textUpper)) {
-        // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
-        if (textUpper.equals("REM")) {
-          if (hasPeriod && yytext().toString().endsWith(".")) {
-            yypushback(1);
-          }
+      // If we have a period, first check if it's part of an abbreviation (like "P." for PRINT)
+      if (hasPeriod && KeywordRegistry.isKeyword(textUpper)) {
+        // Period is part of the abbreviation - consume it
+        String keywordWithoutPeriod = textUpper.substring(0, textUpper.length() - 1);
+
+        // Special case: REM is a comment keyword
+        if (keywordWithoutPeriod.equals("REM")) {
           yybegin(IN_COMMENT);
-          return KEYWORD;  // Return KEYWORD so it gets keyword coloring
+          return KEYWORD;
         }
 
-        if (hasPeriod && yytext().toString().endsWith(".")) {
-          // Don't consume the period if it's after a keyword
+        return KEYWORD;
+      }
+
+      // Check if the entire token is a keyword (without period, but including $ or # suffix)
+      String textUpperWithoutPeriod = hasPeriod ? textUpper.substring(0, textUpper.length() - 1) : textUpper;
+      if (KeywordRegistry.isKeyword(textUpperWithoutPeriod)) {
+        // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
+        if (textUpperWithoutPeriod.equals("REM")) {
+          if (hasPeriod) {
+            yypushback(1);  // Period is not part of the keyword
+          }
+          yybegin(IN_COMMENT);
+          return KEYWORD;
+        }
+
+        if (hasPeriod) {
+          // Period is not part of the keyword - push it back
           yypushback(1);
         }
         return KEYWORD;
@@ -145,11 +158,15 @@ APOSTROPHE = '
       for (int len = maxKeywordLength; len >= 2; len--) {
         String candidate = textUpper.substring(0, len);
         if (KeywordRegistry.isKeyword(candidate)) {
+          // Determine if the period should be consumed as part of abbreviation
+          boolean periodIsPartOfKeyword = hasPeriod && len == textUpper.length() - 1 && candidate.endsWith(".");
+
           // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
-          if (candidate.equals("REM")) {
+          String candidateWithoutPeriod = candidate.endsWith(".") ? candidate.substring(0, candidate.length() - 1) : candidate;
+          if (candidateWithoutPeriod.equals("REM")) {
             // Push back everything after REM and enter comment mode
             int pushBackCount = text.length() - len;
-            if (hasPeriod && pushBackCount == 0) {
+            if (!periodIsPartOfKeyword && hasPeriod && pushBackCount == 0) {
               pushBackCount = 1;
             }
             if (pushBackCount > 0) {
@@ -161,8 +178,8 @@ APOSTROPHE = '
 
           // Found a keyword! Push back the rest for re-lexing
           int pushBackCount = text.length() - len;
-          if (hasPeriod && pushBackCount == 0) {
-            // Don't push back the period if it's part of the abbreviation
+          if (!periodIsPartOfKeyword && hasPeriod && pushBackCount == 0) {
+            // Period is not part of the abbreviation - push it back
             pushBackCount = 1;
           }
           if (pushBackCount > 0) {

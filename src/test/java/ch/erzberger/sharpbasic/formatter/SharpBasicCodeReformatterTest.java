@@ -134,4 +134,14 @@ class SharpBasicCodeReformatterTest {
         String expected = "60 IF Z$=\"\"THEN 85";
         assertEquals(expected, result);
     }
+
+    @Test
+    @DisplayName("Expand keyword abbreviations")
+    void testExpandAbbreviations() {
+        String input = "10 P.\"Hi there\"";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        // P. expands to PRINT, space after keyword
+        String expected = "10 PRINT \"Hi there\"";
+        assertEquals(expected, result);
+    }
 }

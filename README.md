@@ -6,12 +6,15 @@ An IntelliJ IDEA plugin providing language support for Sharp PC-1500 BASIC, a vi
 
 - **Syntax Highlighting**: Color-coded syntax for keywords, strings, numbers, comments, and line numbers
 - **Code Completion**: Smart keyword suggestions with full and abbreviated forms
+- **Authentic PC-1500 Code Formatter**: Formats code to match PC-1500 output (expands abbreviations, applies proper spacing)
 - **File Type Recognition**: Automatic recognition of `.bas` and `.pc1500` files
+- **Case-Sensitive Keywords**: Only all-uppercase keywords are recognized (e.g., `PRINT` vs `Print`)
 - **Comprehensive Keyword Support**:
   - 97 PC-1500 core keywords
   - 14 CE-150 graphics/printer extension keywords
   - 11 CE-158 communications extension keywords
   - Support for abbreviated command forms (e.g., `P.` for `PRINT`, `G.` for `GOTO`)
+  - Keywords with special suffixes (`INKEY$`, `POKE#`, `PEEK#`)
 
 ## Installation
 
@@ -55,6 +58,46 @@ Type any keyword prefix and press `Ctrl+Space` to see completion suggestions:
 - **Abbreviations**: Type `P.` → expands to `PRINT`
 - **Category indicators**: Shows `[PC-1500]`, `[CE-150]`, or `[CE-158]` for each keyword
 - **Abbreviation hints**: Shows abbreviated form in gray, e.g., `PRINT (P.)`
+
+### Code Formatting
+
+#### Reformat as PC-1500 BASIC
+
+The plugin provides a specialized formatter that matches the authentic PC-1500 output format (as seen in PRO mode, CE-150 printer output, and CE-158 ASCII saves).
+
+**How to use:**
+- Right-click in the editor → **Reformat as PC-1500 BASIC**
+- Or use the **Code** menu → **Reformat as PC-1500 BASIC**
+
+**What the formatter does:**
+- ✅ Expands abbreviated keywords (e.g., `P."Hello"` → `PRINT "Hello"`)
+- ✅ Adds space after keywords (Sharp PC-1500 formatting rule)
+- ✅ Preserves original line endings (LF, CR, or CRLF)
+- ✅ Maintains case sensitivity (only all-uppercase keywords are recognized)
+- ✅ Handles keywords with special suffixes (`INKEY$`, `POKE#`)
+- ✅ Recognizes read-only files and creates scratch files with formatted output
+
+**Read-only file support:**
+When reformatting a read-only file, the formatter automatically creates a scratch file with the formatted code and opens it in a new editor tab. This allows you to compare the formatted output without modifying the original file.
+
+**Why standard "Reformat Code" doesn't work:**
+IntelliJ's standard **Code** → **Reformat Code** action (`Ctrl+Alt+L` / `Cmd+Alt+L`) does not work for Sharp BASIC because:
+- The PC-1500 uses a unique, non-standard formatting style (spaces only after keywords/line numbers)
+- Abbreviations must be expanded to full keywords to match PC-1500 output
+- IntelliJ's generic formatter cannot understand these vintage BASIC-specific rules
+
+Always use **Reformat as PC-1500 BASIC** instead for authentic PC-1500 formatting.
+
+**Example:**
+```basic
+# Before formatting
+10 P."Hi":G.20
+15 F.I=1TO10:N.I
+
+# After formatting
+10 PRINT "Hi":GOTO 20
+15 FOR I=1TO 10:NEXT I
+```
 
 ### Syntax Highlighting Colors
 
@@ -183,6 +226,11 @@ MIT License - see LICENSE file for details
 - Initial MVP release
 - Syntax highlighting for all 122 keywords
 - Code completion with abbreviations
+- Authentic PC-1500 code formatter with abbreviation expansion
+- Case-sensitive keyword recognition (only all-uppercase)
+- Support for keywords with # suffix (POKE#, PEEK#)
+- Read-only file support (creates scratch files with formatted output)
+- Line ending preservation (LF, CR, CRLF)
 - File type recognition for .bas and .pc1500 files
 - Support for PC-1500, CE-150, and CE-158 keywords
 
@@ -194,4 +242,4 @@ Planned features for future releases:
 - Code folding for multi-line structures
 - Quick documentation lookup
 - Integration with Sharp PC-1500 emulators
-- Export to Sharp-compatible formats
+- Export to Sharp-compatible tape/cassette formats (.wav, .bin)

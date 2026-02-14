@@ -1,5 +1,7 @@
 package ch.erzberger.sharpbasic.formatter;
 
+import ch.erzberger.sharpbasic.keywords.BasicKeyword;
+import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
 import ch.erzberger.sharpbasic.lexer.PreprocessingSharpBasicLexer;
 import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
 import com.intellij.psi.tree.IElementType;
@@ -183,10 +185,17 @@ public class SharpBasicCodeReformatter {
             IElementType type = lexer.getTokenType();
             String text = code.substring(lexer.getTokenStart(), lexer.getTokenEnd()).trim();
 
-            // Normalize keywords: remove internal spaces, but preserve case
-            // (PC-1500 is case-sensitive - lowercase "rem" is not a keyword!)
+            // Normalize and expand keywords
             if (type.toString().contains("KEYWORD")) {
+                // Remove internal spaces
                 text = text.replaceAll("\\s+", "");
+
+                // Expand abbreviations to full keyword names
+                // E.g., "P." -> "PRINT", "G." -> "GOTO"
+                BasicKeyword keyword = KeywordRegistry.lookup(text.toUpperCase());
+                if (keyword != null) {
+                    text = keyword.getName();
+                }
             }
 
             tokens.add(new TokenInfo(type, text));
