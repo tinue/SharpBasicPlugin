@@ -140,9 +140,10 @@ public class PreprocessingSharpBasicLexer extends LexerBase {
             // Check for comment start (apostrophe only)
             // REM is handled by the underlying lexer as a keyword that enters comment mode
             if (!inString && !inComment) {
-                // Check for REM keyword with spaces (R  E  M becomes REM)
-                // But DON'T set inComment here - let the lexer handle it
-                if (c == 'R' || c == 'r') {
+                // Check for REM keyword (with or without spaces)
+                // PC-1500 is case-sensitive: only recognize uppercase REM
+                if (c == 'R') {  // Only uppercase R
+                    // Check for "R E M" with spaces OR "REM" without spaces
                     int pos = i + 1;
                     while (pos < input.length() && (input.charAt(pos) == ' ' || input.charAt(pos) == '\t')) {
                         pos++;
@@ -159,9 +160,21 @@ public class PreprocessingSharpBasicLexer extends LexerBase {
                             preprocToOrig[preprocessedPos++] = i;
                             preprocToOrig[preprocessedPos++] = ePos;
                             preprocToOrig[preprocessedPos++] = pos;
-                            // Let the underlying lexer handle entering comment mode
-                            // Just skip past the M
+                            // Enter comment mode - preserve everything after REM
+                            inComment = true;
                             i = pos + 1;
+                            continue;
+                        }
+                    } else if (pos == i + 1 && pos < input.length() && input.charAt(pos) == 'E') {
+                        // "RE" without space after R
+                        if (pos + 1 < input.length() && input.charAt(pos + 1) == 'M') {
+                            // Found "REM" without spaces - just pass through and enter comment mode
+                            result.append("REM");
+                            preprocToOrig[preprocessedPos++] = i;
+                            preprocToOrig[preprocessedPos++] = pos;
+                            preprocToOrig[preprocessedPos++] = pos + 1;
+                            inComment = true;
+                            i = pos + 2;
                             continue;
                         }
                     }

@@ -30,7 +30,7 @@ DECIMAL = [0-9]+ \. [0-9]+
 SCIENTIFIC = [0-9]+ (\. [0-9]+)? [Ee] [+\-]? [0-9]+
 STRING = \"([^\"\r\n]|\"\")*\"
 IDENTIFIER = [A-Za-z][A-Za-z0-9]*\$?
-COMMENT_START = [Rr][Ee][Mm]
+COMMENT_START = REM
 
 // Operators and separators
 PLUS = \+
@@ -90,11 +90,11 @@ APOSTROPHE = '
   // Strings
   {STRING}                { atLineStart = false; return STRING; }
 
-  // Comment detection - REM keyword
+  // Comment detection - REM keyword (case-sensitive: uppercase only)
   {COMMENT_START} ({WHITE_SPACE} | {LINE_TERMINATOR})? {
     atLineStart = false;
     yybegin(IN_COMMENT);
-    return COMMENT;
+    return KEYWORD;  // Return KEYWORD for syntax highlighting, but enter comment mode
   }
 
   // Comment detection - single quote/apostrophe (alternative to REM)
@@ -107,64 +107,71 @@ APOSTROPHE = '
   // Identifiers and keywords (including those with $ suffix like INKEY$)
   {IDENTIFIER} ({PERIOD})? {
     atLineStart = false;
-    String text = yytext().toString().toUpperCase();
+    String text = yytext().toString();
+    String textUpper = text.toUpperCase();
     boolean hasPeriod = text.endsWith(".");
     boolean hasDollar = !hasPeriod && text.endsWith("$");
 
     // Remove trailing period if present (for abbreviations)
     if (hasPeriod) {
-      text = text.substring(0, text.length() - 1);
+      textUpper = textUpper.substring(0, textUpper.length() - 1);
     }
 
-    // Check if the entire token is a keyword (including $ suffix)
-    if (KeywordRegistry.isKeyword(text)) {
-      // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
-      if (text.equals("REM")) {
-        if (hasPeriod && yytext().toString().endsWith(".")) {
-          yypushback(1);
-        }
-        yybegin(IN_COMMENT);
-        return KEYWORD;  // Return KEYWORD so it gets keyword coloring
-      }
-
-      if (hasPeriod && yytext().toString().endsWith(".")) {
-        // Don't consume the period if it's after a keyword
-        yypushback(1);
-      }
-      return KEYWORD;
-    }
-
-    // Try to find the longest matching keyword from the start
-    // This implements Sharp BASIC's greedy tokenization (e.g., "QAND" -> "Q" then retry "AND")
-    // For keywords with $, we need to check with the $ included
-    int maxKeywordLength = Math.min(text.length(), 8); // Keywords are max 8 chars
-    for (int len = maxKeywordLength; len >= 2; len--) {
-      String candidate = text.substring(0, len);
-      if (KeywordRegistry.isKeyword(candidate)) {
+    // PC-1500 is case-sensitive: only recognize ALL-UPPERCASE keywords
+    // Remove $ for checking (INKEY$ should check INKEY)
+    String textWithoutDollar = hasDollar ? text.substring(0, text.length() - 1) : text;
+    boolean isAllUppercase = textWithoutDollar.equals(textWithoutDollar.toUpperCase());
+    if (isAllUppercase) {
+      // Check if the entire token is a keyword (including $ suffix)
+      if (KeywordRegistry.isKeyword(textUpper)) {
         // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
-        if (candidate.equals("REM")) {
-          // Push back everything after REM and enter comment mode
-          int pushBackCount = text.length() - len;
-          if (hasPeriod && pushBackCount == 0) {
-            pushBackCount = 1;
-          }
-          if (pushBackCount > 0) {
-            yypushback(pushBackCount);
+        if (textUpper.equals("REM")) {
+          if (hasPeriod && yytext().toString().endsWith(".")) {
+            yypushback(1);
           }
           yybegin(IN_COMMENT);
           return KEYWORD;  // Return KEYWORD so it gets keyword coloring
         }
 
-        // Found a keyword! Push back the rest for re-lexing
-        int pushBackCount = text.length() - len;
-        if (hasPeriod && pushBackCount == 0) {
-          // Don't push back the period if it's part of the abbreviation
-          pushBackCount = 1;
-        }
-        if (pushBackCount > 0) {
-          yypushback(pushBackCount);
+        if (hasPeriod && yytext().toString().endsWith(".")) {
+          // Don't consume the period if it's after a keyword
+          yypushback(1);
         }
         return KEYWORD;
+      }
+
+      // Try to find the longest matching keyword from the start
+      // This implements Sharp BASIC's greedy tokenization (e.g., "QAND" -> "Q" then retry "AND")
+      // For keywords with $, we need to check with the $ included
+      int maxKeywordLength = Math.min(textUpper.length(), 8); // Keywords are max 8 chars
+      for (int len = maxKeywordLength; len >= 2; len--) {
+        String candidate = textUpper.substring(0, len);
+        if (KeywordRegistry.isKeyword(candidate)) {
+          // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
+          if (candidate.equals("REM")) {
+            // Push back everything after REM and enter comment mode
+            int pushBackCount = text.length() - len;
+            if (hasPeriod && pushBackCount == 0) {
+              pushBackCount = 1;
+            }
+            if (pushBackCount > 0) {
+              yypushback(pushBackCount);
+            }
+            yybegin(IN_COMMENT);
+            return KEYWORD;  // Return KEYWORD so it gets keyword coloring
+          }
+
+          // Found a keyword! Push back the rest for re-lexing
+          int pushBackCount = text.length() - len;
+          if (hasPeriod && pushBackCount == 0) {
+            // Don't push back the period if it's part of the abbreviation
+            pushBackCount = 1;
+          }
+          if (pushBackCount > 0) {
+            yypushback(pushBackCount);
+          }
+          return KEYWORD;
+        }
       }
     }
 

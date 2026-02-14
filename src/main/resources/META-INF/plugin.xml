@@ -42,5 +42,22 @@
         <completion.contributor
             language="SharpBasic"
             implementationClass="ch.erzberger.sharpbasic.completion.SharpBasicCompletionContributor"/>
+
+        <!-- Code Formatting -->
+        <lang.formattingModelBuilder
+            language="SharpBasic"
+            implementationClass="ch.erzberger.sharpbasic.formatter.SharpBasicFormattingModelBuilder"/>
     </extensions>
+
+    <actions>
+        <!-- Reformat as PC-1500 BASIC action -->
+        <action id="SharpBasic.ReformatAsPC1500"
+                class="ch.erzberger.sharpbasic.formatter.ReformatAsPC1500Action"
+                text="Reformat as PC-1500 BASIC"
+                description="Reformat code to match Sharp PC-1500 canonical output format">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift F"/>
+        </action>
+    </actions>
 </idea-plugin>
