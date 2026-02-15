@@ -2,6 +2,8 @@ package ch.erzberger.sharpbasic.parser;
 
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
+import ch.erzberger.sharpbasic.keywords.BasicKeyword;
+import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
 import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
 
 /**
@@ -9,6 +11,25 @@ import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
  * These methods are called from the generated parser via external predicates.
  */
 public class SharpBasicParserUtil extends GeneratedParserUtilBase {
+
+    /**
+     * Checks if the current token is a specific keyword and consumes it.
+     * Supports both full keyword names and their abbreviations.
+     */
+    public static boolean isKeyword(PsiBuilder builder, int level, String keyword) {
+        if (builder.getTokenType() == SharpBasicTypes.KEYWORD) {
+            String tokenText = builder.getTokenText();
+            if (tokenText != null) {
+                tokenText = tokenText.replaceAll("\\s+", "");
+                BasicKeyword bk = KeywordRegistry.lookup(tokenText);
+                if (bk != null && bk.getName().equalsIgnoreCase(keyword)) {
+                    builder.advanceLexer();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     /**
      * Checks if the current token can start an expression.

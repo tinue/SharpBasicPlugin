@@ -43,7 +43,7 @@ class SharpBasicLexerTest {
     /**
      * Helper method to tokenize and return token text pairs
      */
-    private List<TokenInfo> tokenizeWithText(String input) throws IOException {
+    protected List<TokenInfo> tokenizeWithText(String input) throws IOException {
         lexer.start(input, 0, input.length(), 0);
         List<TokenInfo> tokens = new ArrayList<>();
         while (lexer.getTokenType() != null) {
@@ -59,7 +59,7 @@ class SharpBasicLexerTest {
         return tokens;
     }
 
-    private static class TokenInfo {
+    protected static class TokenInfo {
         final IElementType type;
         final String text;
 
@@ -573,5 +573,108 @@ class SharpBasicLexerTest {
 
         assertTrue(foundRemKeyword, "R  E M with spaces should be recognized as REM KEYWORD");
         assertTrue(foundComment, "Should have COMMENT token after REM");
+    }
+    @Test
+    @DisplayName("DIM A$(0)*20 - string length regression")
+    void testDimWithStringLength() throws IOException {
+        String input = "DIM A$(0)*20";
+        List<TokenInfo> tokens = tokenizeWithText(input);
+
+        assertEquals(KEYWORD, tokens.get(0).type); // DIM
+        assertEquals(IDENTIFIER, tokens.get(1).type); // A$
+        assertEquals(LPAREN, tokens.get(2).type);
+        assertEquals(NUMBER, tokens.get(3).type); // 0
+        assertEquals(RPAREN, tokens.get(4).type);
+        assertEquals(MULT, tokens.get(5).type); // *
+        assertEquals(NUMBER, tokens.get(6).type); // 20
+    }
+
+    @Test
+    @DisplayName("P. abbreviation for PRINT")
+    void testPrintAbbreviation() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("10 P.A$(0);");
+        assertEquals(LINE_NUMBER, tokens.get(0).type);
+        assertEquals(KEYWORD, tokens.get(1).type);
+        assertEquals("P.", tokens.get(1).text);
+        assertEquals(IDENTIFIER, tokens.get(2).type);
+        assertEquals("A$", tokens.get(2).text);
+    }
+
+    @Test
+    @DisplayName("Short decimal form .5")
+    void testShortDecimal() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("A=.5");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals(EQ, tokens.get(1).type);
+        assertEquals(NUMBER, tokens.get(2).type);
+        assertEquals(".5", tokens.get(2).text);
+    }
+
+    @Test
+    @DisplayName("Short decimal form 1.")
+    void testShortDecimalTrailingDot() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("A=1.");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals(EQ, tokens.get(1).type);
+        assertEquals(NUMBER, tokens.get(2).type);
+        assertEquals("1.", tokens.get(2).text);
+    }
+
+    @Test
+    @DisplayName("Scientific notation with short decimal .5E2")
+    void testScientificShortDecimal() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("A=.5E2");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals(EQ, tokens.get(1).type);
+        assertEquals(NUMBER, tokens.get(2).type);
+        assertEquals(".5E2", tokens.get(2).text);
+    }
+
+    @Test
+    @DisplayName("Coordinate pair in parentheses (108,-1.1*R)")
+    void testCoordinatePair() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("(108,-1.1*R)");
+        assertEquals(LPAREN, tokens.get(0).type);
+        assertEquals(NUMBER, tokens.get(1).type);
+        assertEquals(COMMA, tokens.get(2).type);
+        assertEquals(MINUS, tokens.get(3).type);
+        assertEquals(NUMBER, tokens.get(4).type);
+        assertEquals(MULT, tokens.get(5).type);
+        assertEquals(IDENTIFIER, tokens.get(6).type);
+        assertEquals(RPAREN, tokens.get(7).type);
+    }
+
+    @Test
+    @DisplayName("Function call without parentheses ASC Z$")
+    void testFunctionWithoutParens() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("ASC Z$");
+        assertEquals(KEYWORD, tokens.get(0).type);
+        assertEquals("ASC", tokens.get(0).text);
+        assertEquals(IDENTIFIER, tokens.get(1).type);
+        assertEquals("Z$", tokens.get(1).text);
+    }
+
+    @Test
+    @DisplayName("Assignment to keyword TIME=0")
+    void testKeywordAssignment() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("TIME=0");
+        assertEquals(KEYWORD, tokens.get(0).type);
+        assertEquals("TIME", tokens.get(0).text);
+        assertEquals(EQ, tokens.get(1).type);
+        assertEquals(NUMBER, tokens.get(2).type);
+    }
+
+    @Test
+    @DisplayName("Interleaved INPUT prompts and variables")
+    void testInterleavedInput() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("INPUT \"A\";A,\"B\";B");
+        assertEquals(KEYWORD, tokens.get(0).type); // INPUT
+        assertEquals(STRING, tokens.get(1).type);  // "A"
+        assertEquals(SEMICOLON, tokens.get(2).type);
+        assertEquals(IDENTIFIER, tokens.get(3).type); // A
+        assertEquals(COMMA, tokens.get(4).type);
+        assertEquals(STRING, tokens.get(5).type);  // "B"
+        assertEquals(SEMICOLON, tokens.get(6).type);
+        assertEquals(IDENTIFIER, tokens.get(7).type); // B
     }
 }

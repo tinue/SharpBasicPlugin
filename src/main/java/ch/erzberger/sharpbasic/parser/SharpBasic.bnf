@@ -15,7 +15,7 @@
 
   tokens = [
     LINE_NUMBER='regexp:[0-9]+'
-    NUMBER='regexp:[0-9]+(\.[0-9]+)?([Ee][+\-]?[0-9]+)?'
+    NUMBER='regexp:([0-9]*\.[0-9]+|[0-9]+\.?[0-9]*)([Ee][+\-]?[0-9]+)?'
     STRING='regexp:"([^"\r\n]|"")*"'
     IDENTIFIER='regexp:[A-Za-z][A-Za-z0-9]*\$?'
     KEYWORD='regexp:[A-Za-z]+\.?'
@@ -59,62 +59,67 @@ statement ::= for_stmt
             | return_stmt
             | input_stmt
             | print_stmt
-            | let_stmt
             | dim_stmt
             | data_stmt
             | read_stmt
             | rem_stmt
             | end_stmt
             | other_stmt
+            | let_stmt
             | expression
 
-print_stmt ::= KEYWORD print_items?
-print_items ::= expression print_continuation*
-print_continuation ::= print_sep (<<isExpressionStart>> expression)?
+print_stmt ::= <<isKeyword "PRINT">> print_items?
+             | <<isKeyword "LPRINT">> print_items?
+print_items ::= (expression | print_sep) (print_continuation)*
+print_continuation ::= (expression | print_sep)
 print_sep ::= COMMA | SEMICOLON
 
-for_stmt ::= KEYWORD IDENTIFIER EQ comparison_expr KEYWORD comparison_expr (KEYWORD comparison_expr)?
+for_stmt ::= <<isKeyword "FOR">> IDENTIFIER EQ comparison_expr <<isKeyword "TO">> comparison_expr (<<isKeyword "STEP">> comparison_expr)?
 
-next_stmt ::= KEYWORD IDENTIFIER?
+next_stmt ::= <<isKeyword "NEXT">> IDENTIFIER?
 
-if_stmt ::= KEYWORD comparison_expr KEYWORD (statement | LINE_NUMBER)
+if_stmt ::= <<isKeyword "IF">> comparison_expr (<<isKeyword "THEN">> | <<isKeyword "GOTO">>) (statement | LINE_NUMBER)
 
-goto_stmt ::= KEYWORD LINE_NUMBER
+goto_stmt ::= <<isKeyword "GOTO">> LINE_NUMBER
 
-gosub_stmt ::= KEYWORD LINE_NUMBER
+gosub_stmt ::= <<isKeyword "GOSUB">> LINE_NUMBER
 
-return_stmt ::= KEYWORD
+return_stmt ::= <<isKeyword "RETURN">>
 
-input_stmt ::= KEYWORD (STRING (COMMA | SEMICOLON))? variable_list
+input_stmt ::= <<isKeyword "INPUT">> (STRING (COMMA | SEMICOLON))? variable (print_sep? (STRING print_sep?)? variable)*
 
-let_stmt ::= KEYWORD assignment (COMMA assignment)*
-           | assignment (COMMA assignment)*
+let_stmt ::= <<isKeyword "LET">> assignment (COMMA assignment)*
+           | assignment_lookahead assignment (COMMA assignment)*
+
+private assignment_lookahead ::= &((IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)? EQ)
 
 assignment ::= (IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)? EQ expression
 
-dim_stmt ::= KEYWORD variable_list
+dim_stmt ::= <<isKeyword "DIM">> dim_variable_list
+dim_variable_list ::= dim_variable (COMMA dim_variable)*
+dim_variable ::= variable (MULT NUMBER)?
 
-data_stmt ::= KEYWORD expression_list
+data_stmt ::= <<isKeyword "DATA">> expression_list
 
-read_stmt ::= KEYWORD variable_list
+read_stmt ::= <<isKeyword "READ">> variable_list
 
 rem_stmt ::= COMMENT
 
-end_stmt ::= KEYWORD
+end_stmt ::= <<isKeyword "END">>
 
-other_stmt ::= KEYWORD print_items?
+other_stmt ::= !assignment_lookahead KEYWORD print_items?
 
 expression_list ::= expression ((COMMA | SEMICOLON) expression)*
 
 variable_list ::= variable (COMMA variable)*
 
-variable ::= IDENTIFIER (LPAREN expression_list RPAREN)?
+variable ::= (IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)?
 
 expression ::= logical_expr
 
 logical_expr ::= comparison_expr (logical_op comparison_expr)*
 
-logical_op ::= KEYWORD  // AND, OR
+logical_op ::= <<isKeyword "AND">> | <<isKeyword "OR">>
 
 comparison_expr ::= additive_expr (comparison_op additive_expr)*
 
@@ -126,10 +131,14 @@ multiplicative_expr ::= power_expr ((MULT | DIV) power_expr)*
 
 power_expr ::= unary_expr (POWER unary_expr)*
 
-unary_expr ::= (PLUS | MINUS | KEYWORD)? primary_expr  // KEYWORD for NOT
+unary_expr ::= (PLUS | MINUS | <<isKeyword "NOT">>)? primary_expr  // KEYWORD for NOT
 
 primary_expr ::= NUMBER
                | STRING
                | IDENTIFIER (LPAREN expression_list? RPAREN)?  // Variable or function call
-               | KEYWORD (LPAREN expression_list? RPAREN)?     // Keyword function
-               | LPAREN expression RPAREN
+               | <<isKeyword "LEFT$">> LPAREN expression_list RPAREN
+               | <<isKeyword "RIGHT$">> LPAREN expression_list RPAREN
+               | <<isKeyword "MID$">> LPAREN expression_list RPAREN
+               | KEYWORD primary_expr                          // Function without parens
+               | KEYWORD (LPAREN expression_list? RPAREN)?     // Keyword function with parens
+               | LPAREN expression_list RPAREN                 // Parenthesized expression list

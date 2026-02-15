@@ -144,4 +144,62 @@ class SharpBasicCodeReformatterTest {
         String expected = "10 PRINT \"Hi there\"";
         assertEquals(expected, result);
     }
+
+    @Test
+    @DisplayName("Format interleaved INPUT statement")
+    void testInterleavedInput() {
+        String input = "20 INPUT \"A:\";A,\"B:\";B";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        // Prompts and variables correctly spaced
+        String expected = "20 INPUT \"A:\";A,\"B:\";B";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Format PRINT with trailing semicolon")
+    void testPrintTrailingSemicolon() {
+        String input = "10 PRINT A$;";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        String expected = "10 PRINT A$;";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Format DIM with length suffix")
+    void testDimWithLength() {
+        String input = "5 DIM A$(0)*20";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        String expected = "5 DIM A$(0)*20";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Format coordinate pairs in GLCURSOR")
+    void testCoordinatePairs() {
+        String input = "130 GLCURSOR(108,-1.1*R)";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        // Space before opening paren
+        String expected = "130 GLCURSOR (108,-1.1*R)";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Format assignment to keyword")
+    void testKeywordAssignment() {
+        String input = "40 TIME=0";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        // Space after TIME keyword
+        String expected = "40 TIME =0";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Format function call without parentheses")
+    void testFunctionWithoutParens() {
+        String input = "70 H=H-SGN(ASC Z$-10.5)";
+        String result = SharpBasicCodeReformatter.reformat(input);
+        // Space before opening paren for SGN
+        String expected = "70 H=H-SGN (ASC Z$-10.5)";
+        assertEquals(expected, result);
+    }
 }
