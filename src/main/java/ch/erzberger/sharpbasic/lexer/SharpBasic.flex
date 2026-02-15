@@ -122,131 +122,65 @@ APOSTROPHE = '
     boolean isAllUppercase = textWithoutSuffix.equals(textWithoutSuffix.toUpperCase());
 
     if (isAllUppercase) {
-      // If we have a period, first check if it's part of an abbreviation (like "P." for PRINT)
-      if (hasPeriod && KeywordRegistry.isKeyword(textUpper)) {
-        // Period is part of the abbreviation - consume it
-        String keywordWithoutPeriod = textUpper.substring(0, textUpper.length() - 1);
-
-        // Special case: REM is a comment keyword
-        if (keywordWithoutPeriod.equals("REM")) {
+      // 1. Exact match (Full keyword or Dotted Abbreviation)
+      if (KeywordRegistry.isKeyword(textUpper)) {
+        String keywordForRemCheck = hasPeriod ? textUpper.substring(0, textUpper.length() - 1) : textUpper;
+        if (keywordForRemCheck.equals("REM")) {
           yybegin(IN_COMMENT);
-          return KEYWORD;
-        }
-
-        return KEYWORD;
-      }
-
-      // Check if the entire token is a keyword (without period, but including $ or # suffix)
-      String textUpperWithoutPeriod = hasPeriod ? textUpper.substring(0, textUpper.length() - 1) : textUpper;
-      if (KeywordRegistry.isKeyword(textUpperWithoutPeriod)) {
-        // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
-        if (textUpperWithoutPeriod.equals("REM")) {
-          if (hasPeriod) {
-            yypushback(1);  // Period is not part of the keyword
-          }
-          yybegin(IN_COMMENT);
-          return KEYWORD;
-        }
-
-        if (hasPeriod) {
-          // Period is not part of the keyword - push it back
-          yypushback(1);
         }
         return KEYWORD;
       }
 
-      // Try to find the longest matching keyword from the start
-      // This implements Sharp BASIC's greedy tokenization (e.g., "QAND" -> "Q" then retry "AND")
-      // For keywords with $ or #, we need to check with the suffix included
-      int maxKeywordLength = Math.min(textUpper.length(), 8); // Keywords are max 8 chars
-      for (int len = maxKeywordLength; len >= 2; len--) {
+      // 2. Greedy match for keywords starting from longest prefix
+      int maxLen = textUpper.length();
+      for (int len = maxLen; len >= 2; len--) {
         String candidate = textUpper.substring(0, len);
         if (KeywordRegistry.isKeyword(candidate)) {
-          // Determine if the period should be consumed as part of abbreviation
-          boolean periodIsPartOfKeyword = hasPeriod && len == textUpper.length() - 1 && candidate.endsWith(".");
+           // Skip if it's a keyword prefix followed by a variable suffix (e.g., SG followed by $)
+           if ((hasDollar || hasHash) && len == maxLen - 1) {
+             continue;
+           }
 
-          // Special case: REM is a comment keyword - return as KEYWORD but enter comment mode
-          String candidateWithoutPeriod = candidate.endsWith(".") ? candidate.substring(0, candidate.length() - 1) : candidate;
-          if (candidateWithoutPeriod.equals("REM")) {
-            // Push back everything after REM and enter comment mode
-            int pushBackCount = text.length() - len;
-            if (!periodIsPartOfKeyword && hasPeriod && pushBackCount == 0) {
-              pushBackCount = 1;
-            }
-            if (pushBackCount > 0) {
-              yypushback(pushBackCount);
-            }
-            yybegin(IN_COMMENT);
-            return KEYWORD;  // Return KEYWORD so it gets keyword coloring
-          }
+           // If it's a dotted abbreviation, it's only a keyword if the dot is consumed.
+           // If we are here, it means the whole token wasn't a keyword (checked in step 1).
+           // So if candidate is "P." and whole token is "P.Q", we should match "P.".
+           
+           boolean periodIsPartOfKeyword = hasPeriod && len == maxLen - 1 && candidate.endsWith(".");
+           
+           String candidateWithoutPeriod = candidate.endsWith(".") ? candidate.substring(0, candidate.length() - 1) : candidate;
+           if (candidateWithoutPeriod.equals("REM")) {
+             int pushBackCount = text.length() - len;
+             if (!periodIsPartOfKeyword && hasPeriod && pushBackCount == 0) pushBackCount = 1;
+             if (pushBackCount > 0) yypushback(pushBackCount);
+             yybegin(IN_COMMENT);
+             return KEYWORD;
+           }
 
-          // Found a keyword! Push back the rest for re-lexing
-          int pushBackCount = text.length() - len;
-          if (!periodIsPartOfKeyword && hasPeriod && pushBackCount == 0) {
-            // Period is not part of the abbreviation - push it back
-            pushBackCount = 1;
-          }
-          if (pushBackCount > 0) {
-            yypushback(pushBackCount);
-          }
-          return KEYWORD;
+           int pushBackCount = text.length() - len;
+           if (!periodIsPartOfKeyword && hasPeriod && pushBackCount == 0) pushBackCount = 1;
+           if (pushBackCount > 0) yypushback(pushBackCount);
+           return KEYWORD;
         }
       }
     }
 
-    // Even if the whole identifier isn't uppercase, check for uppercase prefix keywords
-    // This handles cases like "REMThisisatest" where "REM" is uppercase but "Thisisatest" is mixed case
-    if (!isAllUppercase) {
-      // Find the length of the uppercase prefix
-      int uppercasePrefixLen = 0;
-      for (int i = 0; i < textWithoutSuffix.length(); i++) {
-        if (Character.isUpperCase(textWithoutSuffix.charAt(i))) {
-          uppercasePrefixLen = i + 1;
-        } else {
-          break;
-        }
-      }
-
-      // Try to match keywords in the uppercase prefix (minimum 2 chars for a keyword)
-      if (uppercasePrefixLen >= 2) {
-        String uppercasePrefix = text.substring(0, uppercasePrefixLen).toUpperCase();
-        int maxKeywordLength = Math.min(uppercasePrefix.length(), 8);
-        for (int len = maxKeywordLength; len >= 2; len--) {
-          String candidate = uppercasePrefix.substring(0, len);
-          if (KeywordRegistry.isKeyword(candidate)) {
-            // Special case: REM is a comment keyword
-            if (candidate.equals("REM")) {
-              int pushBackCount = text.length() - len;
-              if (pushBackCount > 0) {
-                yypushback(pushBackCount);
-              }
-              yybegin(IN_COMMENT);
-              return KEYWORD;
-            }
-
-            // Found a keyword! Push back the rest for re-lexing
-            int pushBackCount = text.length() - len;
-            if (pushBackCount > 0) {
-              yypushback(pushBackCount);
-            }
-            return KEYWORD;
-          }
-        }
-      }
+    // --- CASE-INSENSITIVE MATCHING FOR REM ---
+    // Match REM regardless of case if it's followed by something or is the whole token
+    if (textUpper.equals("REM") || textUpper.startsWith("REM")) {
+        int len = 3;
+        yypushback(text.length() - len);
+        yybegin(IN_COMMENT);
+        return KEYWORD;
     }
 
-    // Not a keyword
-    // If it has a $ or # suffix and isn't a keyword, it's a variable identifier
-    if (hasDollar || hasHash) {
+    // 3. Not a keyword. Check if it's a valid identifier.
+    // 2-character identifiers (MC, ND, A1, etc.) or suffixes ($/#)
+    if (text.length() <= 2 || hasDollar || hasHash) {
       return IDENTIFIER;
     }
-
-    // Not a keyword - if length > 1, push back all but first char and return first char as identifier
-    // This allows "QAND" to become "Q" + (retry "AND")
-    if (text.length() > 1) {
-      yypushback(yytext().length() - 1);
-    }
-
+    
+    // Not a keyword and longer than a valid identifier -> push back all but first char
+    yypushback(text.length() - 1);
     return IDENTIFIER;
   }
 

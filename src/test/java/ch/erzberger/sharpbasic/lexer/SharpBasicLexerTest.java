@@ -74,6 +74,55 @@ class SharpBasicLexerTest {
         }
     }
 
+    @Test
+    @DisplayName("Greedy keyword matching should not split variables with $ or # suffix")
+    void testVariableWithKeywordPrefix() throws IOException {
+        // SG is abbreviation for SGN. SG$ should be a single IDENTIFIER, not SGN + $
+        List<TokenInfo> tokens = tokenizeWithText("SG$=\"Y\"");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("SG$", tokens.get(0).text);
+        assertEquals(EQ, tokens.get(1).type);
+        assertEquals(STRING, tokens.get(2).type);
+
+        // PE is abbreviation for PEEK#. PE$ should be a single IDENTIFIER
+        tokens = tokenizeWithText("PE$=\"X\"");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("PE$", tokens.get(0).text);
+
+        // PI is a keyword. PI$ should be a single IDENTIFIER
+        tokens = tokenizeWithText("PI$=\"Z\"");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("PI$", tokens.get(0).text);
+        
+        // Check greedy matching still works for non-suffix cases
+        // QAND -> Q (IDENTIFIER) + AND (KEYWORD)
+        tokens = tokenizeWithText("QAND");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("Q", tokens.get(0).text);
+        assertEquals(KEYWORD, tokens.get(1).type);
+        assertEquals("AND", tokens.get(1).text);
+    }
+
+    @Test
+    @DisplayName("Two-character variables should not be split")
+    void testTwoCharVariables() throws IOException {
+        // MC should be a single IDENTIFIER, not M + C
+        List<TokenInfo> tokens = tokenizeWithText("MC-B");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("MC", tokens.get(0).text);
+        assertEquals(MINUS, tokens.get(1).type);
+
+        // ND should be a single IDENTIFIER, not N + D
+        tokens = tokenizeWithText("ND=4");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("ND", tokens.get(0).text);
+
+        // A1 should be a single IDENTIFIER
+        tokens = tokenizeWithText("A1=10");
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("A1", tokens.get(0).text);
+    }
+
     // ========== Line Numbers ==========
 
     @Test
@@ -202,15 +251,47 @@ class SharpBasicLexerTest {
     }
 
     @Test
-    @DisplayName("Multi-character non-keywords split into single chars")
+    @DisplayName("Multi-character non-keywords (2-letter variables)")
     void testMultiCharIdentifiers() throws IOException {
-        // Sharp BASIC's greedy tokenization splits non-keyword sequences
-        // "ZZ" becomes "Z" + "Z", "X1" becomes "X" + "1"
+        // Sharp BASIC allows 2-character variables like ZZ, MC, A1
         List<TokenInfo> tokens = tokenizeWithText("ZZ");
+        assertEquals(1, tokens.size());
         assertEquals(IDENTIFIER, tokens.get(0).type);
-        assertEquals("Z", tokens.get(0).text);
-        assertEquals(IDENTIFIER, tokens.get(1).type);
-        assertEquals("Z", tokens.get(1).text);
+        assertEquals("ZZ", tokens.get(0).text);
+        
+        tokens = tokenizeWithText("MC");
+        assertEquals(1, tokens.size());
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+        assertEquals("MC", tokens.get(0).text);
+    }
+
+    @Test
+    @DisplayName("All abbreviations for PRINT should be recognized")
+    void testPrintAbbreviations() throws IOException {
+        String[] forms = {"P.", "PR.", "PRI.", "PRIN.", "PRINT"};
+        for (String form : forms) {
+            List<TokenInfo> tokens = tokenizeWithText(form);
+            tokens.removeIf(t -> t.type == WHITE_SPACE);
+            assertEquals(1, tokens.size(), "Failed for form: " + form);
+            assertEquals(KEYWORD, tokens.get(0).type, "Failed for form: " + form);
+            assertEquals(form, tokens.get(0).text, "Failed for form: " + form);
+        }
+    }
+
+    @Test
+    @DisplayName("Abbreviations without dot should be identifiers")
+    void testAbbreviationsWithoutDot() throws IOException {
+        // SG is abbreviation for SGN. Without dot it should be IDENTIFIER.
+        List<TokenInfo> tokens = tokenizeWithText("SG");
+        tokens.removeIf(t -> t.type == WHITE_SPACE);
+        assertEquals(1, tokens.size());
+        assertEquals(IDENTIFIER, tokens.get(0).type);
+
+        // P is abbreviation for PRINT. Without dot it should be IDENTIFIER.
+        tokens = tokenizeWithText("P");
+        tokens.removeIf(t -> t.type == WHITE_SPACE);
+        assertEquals(1, tokens.size());
+        assertEquals(IDENTIFIER, tokens.get(0).type);
     }
 
     // ========== Adjacent Keywords (Greedy Tokenization) ==========
@@ -399,11 +480,13 @@ class SharpBasicLexerTest {
     @Test
     @DisplayName("Line 110: LPRINTAB")
     void testLprintAb() throws IOException {
-        // AB is the abbreviation for ABS keyword
+        // AB is the abbreviation for ABS keyword, but needs a dot to be a keyword.
+        // It's a 2-character identifier, so it stays as AB.
         List<TokenInfo> tokens = tokenizeWithText("LPRINTAB");
+        tokens.removeIf(t -> t.type == WHITE_SPACE);
         assertEquals(KEYWORD, tokens.get(0).type);
         assertEquals("LPRINT", tokens.get(0).text);
-        assertEquals(KEYWORD, tokens.get(1).type);
+        assertEquals(IDENTIFIER, tokens.get(1).type);
         assertEquals("AB", tokens.get(1).text);
     }
 

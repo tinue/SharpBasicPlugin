@@ -23,21 +23,18 @@ public class KeywordRegistry {
 
         // Register all keywords by full name and abbreviation (uppercase for case-insensitive lookup)
         for (BasicKeyword keyword : ALL_KEYWORDS) {
+            String name = keyword.getName().toUpperCase();
             // Register full name
-            KEYWORD_MAP.put(keyword.getName().toUpperCase(), keyword);
+            KEYWORD_MAP.put(name, keyword);
 
-            // Register abbreviation if different from full name
-            String rawAbbrev = keyword.getRawAbbreviation();
-            if (!rawAbbrev.equals(keyword.getName())) {
-                // Only register abbreviation WITH dot suffix to distinguish from variables
-                // E.g., "R." is RUN keyword, but "R" is a variable
-                KEYWORD_MAP.put((rawAbbrev + ".").toUpperCase(), keyword);
-
-                // Multi-character abbreviations (2+ chars) can also be recognized without dot
-                // E.g., "PR" for PRINT, "GOS" for GOSUB
-                if (rawAbbrev.length() >= 2) {
-                    KEYWORD_MAP.put(rawAbbrev.toUpperCase(), keyword);
-                }
+            // Register all possible abbreviations WITH dot suffix
+            // E.g., "P.", "PR.", "PRI.", "PRIN." for PRINT
+            String rawAbbrev = keyword.getRawAbbreviation().toUpperCase();
+            
+            // Start from the defined shortest abbreviation up to the full name
+            for (int i = rawAbbrev.length(); i < name.length(); i++) {
+                String abbrev = name.substring(0, i);
+                KEYWORD_MAP.put(abbrev + ".", keyword);
             }
         }
     }
