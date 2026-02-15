@@ -101,8 +101,8 @@ class SharpBasicCompactReformatterTest {
     void testKeywordsWithHash() {
         String input = "10 POKE# 64000,255";
         String result = SharpBasicCompactReformatter.reformat(input);
-        // POKE# abbreviation is PO# (keep the # suffix)
-        String expected = "10PO#.64000,255";
+        // POKE# abbreviation is PO. (# is dropped in abbreviation)
+        String expected = "10PO.64000,255";
         assertEquals(expected, result);
     }
 
@@ -133,6 +133,16 @@ class SharpBasicCompactReformatterTest {
         String result = SharpBasicCompactReformatter.reformat(input);
         // IF stays IF, LEFT$ -> LEF., LET stays LET
         String expected = "40V=1:IFLEF.(V$,1)=\"Y\"LETV=2";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("POKE without hash has no abbreviation")
+    void testPokeWithoutHash() {
+        String input = "10 POKE 64000,255";
+        String result = SharpBasicCompactReformatter.reformat(input);
+        // POKE has no abbreviation, stays as POKE
+        String expected = "10POKE64000,255";
         assertEquals(expected, result);
     }
 }

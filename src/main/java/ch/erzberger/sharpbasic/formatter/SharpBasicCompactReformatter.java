@@ -160,10 +160,6 @@ public class SharpBasicCompactReformatter {
                     continue;
                 }
 
-                // Check if keyword has # suffix
-                boolean hasHash = text.endsWith("#");
-                String textWithoutHash = hasHash ? text.substring(0, text.length() - 1) : text;
-
                 // Convert to abbreviated form only if it saves space
                 BasicKeyword keyword = KeywordRegistry.lookup(text.toUpperCase());
                 if (keyword != null) {
@@ -172,8 +168,8 @@ public class SharpBasicCompactReformatter {
 
                     // Only use abbreviation if it's actually shorter
                     // Compare: abbreviation+period vs full keyword
-                    String abbreviatedForm = hasHash ? (abbrev + "#.") : (abbrev + ".");
-                    String fullForm = hasHash ? (fullName + "#") : fullName;
+                    String abbreviatedForm = abbrev + ".";
+                    String fullForm = fullName;
 
                     if (abbreviatedForm.length() < fullForm.length()) {
                         // Abbreviation saves space - use it
