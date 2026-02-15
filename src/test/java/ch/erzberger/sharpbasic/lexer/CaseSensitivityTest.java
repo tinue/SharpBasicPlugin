@@ -1,6 +1,6 @@
 package ch.erzberger.sharpbasic.lexer;
 
-import ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes;
+import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
 import com.intellij.psi.tree.IElementType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ class CaseSensitivityTest {
         String tokenText = "REM test".substring(lexer.getTokenStart(), lexer.getTokenEnd());
         System.out.println("Token type for 'REM': " + tokenType);
         System.out.println("Token text: '" + tokenText + "'");
-        assertEquals(SharpBasicTokenTypes.KEYWORD, tokenType, "REM should be recognized as KEYWORD");
+        assertEquals(SharpBasicTypes.KEYWORD, tokenType, "REM should be recognized as KEYWORD");
     }
 
     @Test
@@ -41,7 +41,7 @@ class CaseSensitivityTest {
         IElementType tokenType = lexer.getTokenType();
         System.out.println("Preprocessing Lexer - Token type for 'rem': " + tokenType);
 
-        assertEquals(SharpBasicTokenTypes.IDENTIFIER, tokenType, "rem should be recognized as IDENTIFIER, not KEYWORD");
+        assertEquals(SharpBasicTypes.IDENTIFIER, tokenType, "rem should be recognized as IDENTIFIER, not KEYWORD");
     }
 
     @Test
@@ -52,6 +52,6 @@ class CaseSensitivityTest {
 
         IElementType tokenType = lexer.getTokenType();
         System.out.println("Token type for 'Rem': " + tokenType);
-        assertEquals(SharpBasicTokenTypes.IDENTIFIER, tokenType, "Rem should be recognized as IDENTIFIER, not KEYWORD");
+        assertEquals(SharpBasicTypes.IDENTIFIER, tokenType, "Rem should be recognized as IDENTIFIER, not KEYWORD");
     }
 }

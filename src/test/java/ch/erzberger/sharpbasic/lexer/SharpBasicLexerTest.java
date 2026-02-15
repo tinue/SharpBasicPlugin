@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes.*;
+import static ch.erzberger.sharpbasic.psi.SharpBasicTypes.*;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
 import static org.junit.jupiter.api.Assertions.*;
 

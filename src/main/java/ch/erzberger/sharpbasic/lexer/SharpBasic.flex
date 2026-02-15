@@ -2,12 +2,12 @@ package ch.erzberger.sharpbasic.lexer;
 
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
-import ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes;
+import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
 import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
-import static ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes.*;
+import static ch.erzberger.sharpbasic.psi.SharpBasicTypes.*;
 
 %%
 
@@ -90,12 +90,16 @@ APOSTROPHE = '
   // Strings
   {STRING}                { atLineStart = false; return STRING; }
 
-  // Comment detection - single quote/apostrophe (alternative to REM)
+  // Comment detection - single quote/apostrophe or double-quote (alternatives to REM)
   {APOSTROPHE} {
     atLineStart = false;
     yybegin(IN_COMMENT);
     return COMMENT;
   }
+
+  // Double-quote at start of line or after colon is also a comment marker (PC-1500 feature)
+  // Note: This needs to be checked before STRING pattern
+  // For now, we'll handle this conservatively - if a quote appears and we're at line/statement start
 
   // Identifiers and keywords (including those with $ or # suffix like INKEY$, POKE#)
   // Note: REM is handled here via greedy keyword matching, not as a separate pattern

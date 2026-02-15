@@ -1,0 +1,2 @@
+10 PRINT A$(0);
+20 PRINT"Hi"

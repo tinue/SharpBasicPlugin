@@ -1,5 +1,6 @@
 {
   parserClass="ch.erzberger.sharpbasic.parser.SharpBasicParser"
+  parserUtilClass="ch.erzberger.sharpbasic.parser.SharpBasicParserUtil"
 
   extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
 
@@ -44,18 +45,20 @@
 
 file ::= line*
 
-line ::= LINE_NUMBER? statement_list? LINE_TERMINATOR?
+line ::= LINE_NUMBER statement_list? LINE_TERMINATOR?
+       | statement_list LINE_TERMINATOR?
+       | LINE_TERMINATOR
 
 statement_list ::= statement (COLON statement)*
 
-statement ::= print_stmt
-            | for_stmt
+statement ::= for_stmt
             | next_stmt
             | if_stmt
             | goto_stmt
             | gosub_stmt
             | return_stmt
             | input_stmt
+            | print_stmt
             | let_stmt
             | dim_stmt
             | data_stmt
@@ -65,13 +68,16 @@ statement ::= print_stmt
             | other_stmt
             | expression
 
-print_stmt ::= KEYWORD expression_list?
+print_stmt ::= KEYWORD print_items?
+print_items ::= expression print_continuation*
+print_continuation ::= print_sep (<<isExpressionStart>> expression)?
+print_sep ::= COMMA | SEMICOLON
 
-for_stmt ::= KEYWORD IDENTIFIER EQ expression KEYWORD expression (KEYWORD expression)?
+for_stmt ::= KEYWORD IDENTIFIER EQ comparison_expr KEYWORD comparison_expr (KEYWORD comparison_expr)?
 
 next_stmt ::= KEYWORD IDENTIFIER?
 
-if_stmt ::= KEYWORD expression KEYWORD (statement | LINE_NUMBER)
+if_stmt ::= KEYWORD comparison_expr KEYWORD (statement | LINE_NUMBER)
 
 goto_stmt ::= KEYWORD LINE_NUMBER
 
@@ -81,7 +87,10 @@ return_stmt ::= KEYWORD
 
 input_stmt ::= KEYWORD (STRING (COMMA | SEMICOLON))? variable_list
 
-let_stmt ::= (KEYWORD)? IDENTIFIER EQ expression
+let_stmt ::= KEYWORD assignment (COMMA assignment)*
+           | assignment (COMMA assignment)*
+
+assignment ::= (IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)? EQ expression
 
 dim_stmt ::= KEYWORD variable_list
 
@@ -93,11 +102,13 @@ rem_stmt ::= COMMENT
 
 end_stmt ::= KEYWORD
 
-other_stmt ::= KEYWORD expression_list?
+other_stmt ::= KEYWORD print_items?
 
-expression_list ::= expression (COMMA expression | SEMICOLON expression)*
+expression_list ::= expression ((COMMA | SEMICOLON) expression)*
 
-variable_list ::= IDENTIFIER (COMMA IDENTIFIER)*
+variable_list ::= variable (COMMA variable)*
+
+variable ::= IDENTIFIER (LPAREN expression_list RPAREN)?
 
 expression ::= logical_expr
 

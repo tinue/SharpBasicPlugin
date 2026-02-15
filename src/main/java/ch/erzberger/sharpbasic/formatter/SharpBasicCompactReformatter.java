@@ -3,7 +3,7 @@ package ch.erzberger.sharpbasic.formatter;
 import ch.erzberger.sharpbasic.keywords.BasicKeyword;
 import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
 import ch.erzberger.sharpbasic.lexer.PreprocessingSharpBasicLexer;
-import ch.erzberger.sharpbasic.psi.SharpBasicTokenTypes;
+import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
 import com.intellij.psi.tree.IElementType;
 
 import java.util.ArrayList;
@@ -147,7 +147,7 @@ public class SharpBasicCompactReformatter {
             String text = code.substring(lexer.getTokenStart(), lexer.getTokenEnd()).trim();
 
             // Handle keywords
-            if (type == SharpBasicTokenTypes.KEYWORD) {
+            if (type == SharpBasicTypes.KEYWORD) {
                 // Remove internal spaces
                 text = text.replaceAll("\\s+", "");
 
@@ -186,7 +186,7 @@ public class SharpBasicCompactReformatter {
             }
 
             // Keep comments (user can manually shorten if needed)
-            if (type == SharpBasicTokenTypes.COMMENT || inComment) {
+            if (type == SharpBasicTypes.COMMENT || inComment) {
                 tokens.add(new TokenInfo(type, text));
                 lexer.advance();
                 continue;
