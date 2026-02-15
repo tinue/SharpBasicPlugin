@@ -210,12 +210,16 @@ public class SharpBasicCodeReformatter {
             TokenInfo next = (i + 1 < tokens.size()) ? tokens.get(i + 1) : null;
 
             // Check if entering comment mode
-            if (current.type == SharpBasicTypes.KEYWORD && current.text.equalsIgnoreCase("REM")) {
+            if (current.type == SharpBasicTypes.COMMENT || (current.type == SharpBasicTypes.KEYWORD && current.text.equalsIgnoreCase("REM"))) {
                 inComment = true;
-                result.append("REM");
-                // Space after REM
-                if (next != null) {
-                    result.append(' ');
+                if (current.type == SharpBasicTypes.KEYWORD) {
+                    result.append("REM");
+                    // Ensure a space after REM if the next token (comment) doesn't start with one
+                    if (next != null && next.type == SharpBasicTypes.COMMENT && !next.text.startsWith(" ") && !next.text.startsWith("\t")) {
+                        result.append(" ");
+                    }
+                } else {
+                    result.append(current.text);
                 }
                 continue;
             }

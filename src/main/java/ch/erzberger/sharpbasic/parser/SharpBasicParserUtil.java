@@ -56,6 +56,7 @@ public class SharpBasicParserUtil extends GeneratedParserUtilBase {
             || builder.getTokenType() == SharpBasicTypes.KEYWORD
             || builder.getTokenType() == SharpBasicTypes.LPAREN
             || builder.getTokenType() == SharpBasicTypes.PLUS
-            || builder.getTokenType() == SharpBasicTypes.MINUS;
+            || builder.getTokenType() == SharpBasicTypes.MINUS
+            || builder.getTokenType() == SharpBasicTypes.AT;
     }
 }

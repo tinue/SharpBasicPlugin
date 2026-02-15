@@ -121,7 +121,6 @@ public class PreprocessingSharpBasicLexer extends LexerBase {
         StringBuilder result = new StringBuilder();
         int[] preprocToOrig = new int[input.length()];
 
-        boolean inString = false;
         boolean inComment = false;
         int preprocessedPos = 0;
 
@@ -129,17 +128,60 @@ public class PreprocessingSharpBasicLexer extends LexerBase {
             char c = input.charAt(i);
 
             // Check for string start/end
+            // PC-1500: Open double quote is also a comment marker
             if (c == '"' && !inComment) {
-                inString = !inString;
-                result.append(c);
-                preprocToOrig[preprocessedPos++] = i;
-                i++;
-                continue;
+                // Look ahead to see if there's a matching closing quote on this line
+                boolean hasClosingQuote = false;
+                for (int j = i + 1; j < input.length(); j++) {
+                    char nextC = input.charAt(j);
+                    if (nextC == '\n' || nextC == '\r') break;
+                    if (nextC == '"') {
+                        // Check for escaped quote ""
+                        if (j + 1 < input.length() && input.charAt(j + 1) == '"') {
+                            j++; // Skip escaped quote
+                        } else {
+                            hasClosingQuote = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasClosingQuote) {
+                    inComment = true;
+                    result.append(c);
+                    preprocToOrig[preprocessedPos++] = i;
+                    i++;
+                    continue;
+                } else {
+                    // It's a closed string. Preserve everything until the closing quote.
+                    result.append(c);
+                    preprocToOrig[preprocessedPos++] = i;
+                    i++;
+                    while (i < input.length()) {
+                        char sc = input.charAt(i);
+                        result.append(sc);
+                        preprocToOrig[preprocessedPos++] = i;
+                        if (sc == '"') {
+                            if (i + 1 < input.length() && input.charAt(i + 1) == '"') {
+                                // Escaped quote
+                                i++;
+                                result.append(input.charAt(i));
+                                preprocToOrig[preprocessedPos++] = i;
+                            } else {
+                                // Closing quote
+                                break;
+                            }
+                        }
+                        i++;
+                    }
+                    i++;
+                    continue;
+                }
             }
 
             // Check for comment start (apostrophe only)
             // REM is handled by the underlying lexer as a keyword that enters comment mode
-            if (!inString && !inComment) {
+            if (!inComment) {
                 // Check for REM keyword (with or without spaces)
                 // PC-1500 is case-sensitive: only recognize uppercase REM
                 if (c == 'R') {  // Only uppercase R
@@ -201,7 +243,7 @@ public class PreprocessingSharpBasicLexer extends LexerBase {
             }
 
             // Inside string or comment: preserve everything
-            if (inString || inComment) {
+            if (inComment) {
                 result.append(c);
                 preprocToOrig[preprocessedPos++] = i;
                 i++;

@@ -45,13 +45,24 @@ class CaseSensitivityTest {
     }
 
     @Test
-    @DisplayName("Mixed case Rem is NOT recognized as keyword")
-    void testMixedCaseRem() throws IOException {
+    @DisplayName("Lowercase print is NOT recognized as keyword")
+    void testLowercasePrint() throws IOException {
         PreprocessingSharpBasicLexer lexer = new PreprocessingSharpBasicLexer();
-        lexer.start("Rem test", 0, 8, 0);
+        lexer.start("print A", 0, 7, 0);
 
         IElementType tokenType = lexer.getTokenType();
-        System.out.println("Token type for 'Rem': " + tokenType);
-        assertEquals(SharpBasicTypes.IDENTIFIER, tokenType, "Rem should be recognized as IDENTIFIER, not KEYWORD");
+        System.out.println("Token type for 'print': " + tokenType);
+        assertEquals(SharpBasicTypes.IDENTIFIER, tokenType, "print should be recognized as IDENTIFIER, not KEYWORD");
+    }
+
+    @Test
+    @DisplayName("Mixed case Print is NOT recognized as keyword")
+    void testMixedCasePrint() throws IOException {
+        PreprocessingSharpBasicLexer lexer = new PreprocessingSharpBasicLexer();
+        lexer.start("Print A", 0, 7, 0);
+
+        IElementType tokenType = lexer.getTokenType();
+        System.out.println("Token type for 'Print': " + tokenType);
+        assertEquals(SharpBasicTypes.IDENTIFIER, tokenType, "Print should be recognized as IDENTIFIER, not KEYWORD");
     }
 }

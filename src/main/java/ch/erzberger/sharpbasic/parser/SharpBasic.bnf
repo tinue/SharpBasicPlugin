@@ -15,9 +15,9 @@
 
   tokens = [
     LINE_NUMBER='regexp:[0-9]+'
-    NUMBER='regexp:([0-9]*\.[0-9]+|[0-9]+\.?[0-9]*)([Ee][+\-]?[0-9]+)?'
+    NUMBER='regexp:(&[0-9A-Fa-f]+|([0-9]*\.[0-9]+|[0-9]+\.?[0-9]*)([Ee][+\-]?[0-9]+)?)'
     STRING='regexp:"([^"\r\n]|"")*"'
-    IDENTIFIER='regexp:[A-Za-z][A-Za-z0-9]*\$?'
+    IDENTIFIER='regexp:[A-Za-z][A-Za-z0-9]*[$#]?|\$'
     KEYWORD='regexp:[A-Za-z]+\.?'
     COMMENT='regexp:REM[^\r\n]*'
 
@@ -38,6 +38,7 @@
     SEMICOLON=';'
     COLON=':'
     HASH='#'
+    AT='@'
 
     LINE_TERMINATOR='regexp:\r\n|\r|\n'
   ]
@@ -45,13 +46,19 @@
 
 file ::= line*
 
-line ::= LINE_NUMBER statement_list? LINE_TERMINATOR?
-       | statement_list LINE_TERMINATOR?
+line ::= LINE_NUMBER STRING? statement_list? (LINE_TERMINATOR | <<eof>>)
+       | LINE_NUMBER? STRING statement_list? (LINE_TERMINATOR | <<eof>>)
+       | statement_list_non_empty (LINE_TERMINATOR | <<eof>>)
        | LINE_TERMINATOR
 
-statement_list ::= statement (COLON statement)*
+statement_list ::= statement_or_empty (COLON statement_or_empty)*
+private statement_or_empty ::= statement?
 
-statement ::= for_stmt
+statement_list_non_empty ::= statement (COLON statement?)*
+                           | COLON (statement? (COLON statement?)* )
+
+statement ::= label_stmt
+            | for_stmt
             | next_stmt
             | if_stmt
             | goto_stmt
@@ -68,32 +75,35 @@ statement ::= for_stmt
             | let_stmt
             | expression
 
+label_stmt ::= STRING statement?
+
 print_stmt ::= <<isKeyword "PRINT">> print_items?
              | <<isKeyword "LPRINT">> print_items?
-print_items ::= (expression | print_sep) (print_continuation)*
-print_continuation ::= (expression | print_sep)
+             | <<isKeyword "GPRINT">> print_items?
+print_items ::= (expression | print_sep | AT? IDENTIFIER (LPAREN expression_list? RPAREN)?) (print_continuation)*
+print_continuation ::= (expression | print_sep | AT? IDENTIFIER (LPAREN expression_list? RPAREN)?)
 print_sep ::= COMMA | SEMICOLON
 
 for_stmt ::= <<isKeyword "FOR">> IDENTIFIER EQ comparison_expr <<isKeyword "TO">> comparison_expr (<<isKeyword "STEP">> comparison_expr)?
 
 next_stmt ::= <<isKeyword "NEXT">> IDENTIFIER?
 
-if_stmt ::= <<isKeyword "IF">> comparison_expr (<<isKeyword "THEN">> | <<isKeyword "GOTO">>) (statement | LINE_NUMBER)
+if_stmt ::= <<isKeyword "IF">> comparison_expr (<<isKeyword "THEN">> | <<isKeyword "GOTO">>)? (statement | LINE_NUMBER)
 
-goto_stmt ::= <<isKeyword "GOTO">> LINE_NUMBER
+goto_stmt ::= <<isKeyword "GOTO">> expression
 
-gosub_stmt ::= <<isKeyword "GOSUB">> LINE_NUMBER
+gosub_stmt ::= <<isKeyword "GOSUB">> expression
 
 return_stmt ::= <<isKeyword "RETURN">>
 
-input_stmt ::= <<isKeyword "INPUT">> (STRING (COMMA | SEMICOLON))? variable (print_sep? (STRING print_sep?)? variable)*
+input_stmt ::= <<isKeyword "INPUT">> (STRING (COMMA | SEMICOLON)?)? variable (print_sep? (STRING print_sep?)? variable)*
 
 let_stmt ::= <<isKeyword "LET">> assignment (COMMA assignment)*
            | assignment_lookahead assignment (COMMA assignment)*
 
-private assignment_lookahead ::= &((IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)? EQ)
+private assignment_lookahead ::= &((AT? (IDENTIFIER | KEYWORD) | AT LPAREN expression_list RPAREN) (LPAREN expression_list RPAREN)? EQ)
 
-assignment ::= (IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)? EQ expression
+assignment ::= (AT? (IDENTIFIER | KEYWORD) | AT LPAREN expression_list RPAREN) (LPAREN expression_list RPAREN)? EQ expression
 
 dim_stmt ::= <<isKeyword "DIM">> dim_variable_list
 dim_variable_list ::= dim_variable (COMMA dim_variable)*
@@ -101,7 +111,7 @@ dim_variable ::= variable (MULT NUMBER)?
 
 data_stmt ::= <<isKeyword "DATA">> expression_list
 
-read_stmt ::= <<isKeyword "READ">> variable_list
+read_stmt ::= <<isKeyword "READ">> (variable_list | AT? IDENTIFIER (LPAREN expression_list? RPAREN)?)
 
 rem_stmt ::= COMMENT
 
@@ -113,7 +123,7 @@ expression_list ::= expression ((COMMA | SEMICOLON) expression)*
 
 variable_list ::= variable (COMMA variable)*
 
-variable ::= (IDENTIFIER | KEYWORD) (LPAREN expression_list RPAREN)?
+variable ::= (AT? (IDENTIFIER | KEYWORD) | AT LPAREN expression_list RPAREN) (LPAREN expression_list RPAREN)?
 
 expression ::= logical_expr
 
@@ -135,6 +145,8 @@ unary_expr ::= (PLUS | MINUS | <<isKeyword "NOT">>)? primary_expr  // KEYWORD fo
 
 primary_expr ::= NUMBER
                | STRING
+               | AT LPAREN expression_list? RPAREN             // Fixed variable access @(V)
+               | AT IDENTIFIER (LPAREN expression_list? RPAREN)? // Graphics variable @$
                | IDENTIFIER (LPAREN expression_list? RPAREN)?  // Variable or function call
                | <<isKeyword "LEFT$">> LPAREN expression_list RPAREN
                | <<isKeyword "RIGHT$">> LPAREN expression_list RPAREN
