@@ -30,7 +30,25 @@ public class SharpBasicCompletionContributor extends CompletionContributor {
                     protected void addCompletions(@NotNull CompletionParameters parameters,
                                                    @NotNull ProcessingContext context,
                                                    @NotNull CompletionResultSet result) {
-                        addKeywordCompletions(result);
+                        // Only show completions on explicit invocation (Ctrl+Space),
+                        // not on auto-popup as the user types (invocationCount == 0).
+                        if (parameters.getInvocationCount() == 0) return;
+
+                        // IntelliJ's default prefix detection only works for IDENTIFIER tokens.
+                        // For KEYWORD tokens (2+ uppercase chars), extract the prefix directly
+                        // from the raw document text: walk backwards from the caret over letters.
+                        int offset = parameters.getOffset();
+                        String docText = parameters.getEditor().getDocument().getText();
+                        int start = offset;
+                        while (start > 0 && Character.isLetter(docText.charAt(start - 1))) {
+                            start--;
+                        }
+                        String prefix = docText.substring(start, offset).toUpperCase(java.util.Locale.ROOT);
+
+                        CompletionResultSet prefixResult = prefix.isEmpty()
+                                ? result
+                                : result.withPrefixMatcher(prefix);
+                        addKeywordCompletions(prefixResult);
                     }
                 });
     }

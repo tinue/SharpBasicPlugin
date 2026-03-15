@@ -211,6 +211,18 @@ APOSTROPHE = '
     return IDENTIFIER;
   }
 
+  // Source-only comment: // at line start (not sent to device, stripped by reformatter)
+  "//"[^\r\n]* {
+    if (atLineStart) {
+      atLineStart = false;
+      return EXTRA_COMMENT;
+    }
+    // // not at line start — push back the second / and return DIV
+    yypushback(yylength() - 1);
+    atLineStart = false;
+    return DIV;
+  }
+
   // Operators
   {PLUS}                  { atLineStart = false; return PLUS; }
   {MINUS}                 { atLineStart = false; return MINUS; }

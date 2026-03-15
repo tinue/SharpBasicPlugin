@@ -760,4 +760,34 @@ class SharpBasicLexerTest {
         assertEquals(SEMICOLON, tokens.get(6).type);
         assertEquals(IDENTIFIER, tokens.get(7).type); // B
     }
+
+    @Test
+    @DisplayName("Source-only comment // at line start is EXTRA_COMMENT")
+    void testDoubleSlashCommentAtLineStart() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("// This is a source comment");
+        assertEquals(1, tokens.size());
+        assertEquals(EXTRA_COMMENT, tokens.get(0).type);
+        assertEquals("// This is a source comment", tokens.get(0).text);
+    }
+
+    @Test
+    @DisplayName("Source-only comment // after BASIC line is two DIV tokens")
+    void testDoubleSlashNotAtLineStart() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("10 PRINT A // not a comment");
+        // // mid-line: first / is DIV, second / is DIV
+        boolean hasDivToken = tokens.stream().anyMatch(t -> t.type == DIV);
+        assertTrue(hasDivToken);
+        boolean hasExtraComment = tokens.stream().anyMatch(t -> t.type == EXTRA_COMMENT);
+        assertFalse(hasExtraComment);
+    }
+
+    @Test
+    @DisplayName("Source-only comment // followed by BASIC code on next line")
+    void testDoubleSlashCommentFollowedByCode() throws IOException {
+        List<TokenInfo> tokens = tokenizeWithText("// comment\n10 PRINT A");
+        assertEquals(EXTRA_COMMENT, tokens.get(0).type);
+        assertEquals("// comment", tokens.get(0).text);
+        assertEquals(LINE_TERMINATOR, tokens.get(1).type);
+        assertEquals(LINE_NUMBER, tokens.get(2).type);
+    }
 }

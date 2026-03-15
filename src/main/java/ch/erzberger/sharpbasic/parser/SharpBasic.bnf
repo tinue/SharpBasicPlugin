@@ -20,6 +20,7 @@
     IDENTIFIER='regexp:[A-Za-z][A-Za-z0-9]*[$#]?|\$'
     KEYWORD='regexp:[A-Za-z]+\.?'
     COMMENT='regexp:REM[^\r\n]*'
+    EXTRA_COMMENT='regexp://[^\r\n]*'
 
     PLUS='+'
     MINUS='-'
@@ -48,6 +49,7 @@ file ::= line*
 
 line ::= LINE_NUMBER STRING? statement_list? (LINE_TERMINATOR | <<eof>>)
        | LINE_NUMBER? STRING statement_list? (LINE_TERMINATOR | <<eof>>)
+       | EXTRA_COMMENT (LINE_TERMINATOR | <<eof>>)
        | statement_list_non_empty (LINE_TERMINATOR | <<eof>>)
        | LINE_TERMINATOR
 
