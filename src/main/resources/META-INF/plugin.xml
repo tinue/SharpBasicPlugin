@@ -17,6 +17,17 @@
     </ul>
     ]]></description>
 
+    <change-notes><![CDATA[
+    <h3>0.2.0</h3>
+    <ul>
+        <li>Major parser and lexer enhancements</li>
+        <li>Keyword abbreviations now require a dot suffix (e.g. <code>P.</code> for <code>PRINT</code>)</li>
+        <li>Fixed: <code>IF</code> conditions with <code>AND</code> and <code>OR</code> operators now parse correctly (e.g. <code>IF &7F AND T GOTO 10</code>)</li>
+        <li>Fixed: hex numbers followed directly by keywords (no spaces) no longer swallow the first letter of the keyword</li>
+        <li><code>#</code> is now recognised as a source-only comment at the start of a line, alongside <code>//</code></li>
+    </ul>
+    ]]></change-notes>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
 
@@ -69,6 +80,26 @@
             <add-to-group group-id="CodeMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift C"/>
+        </action>
+
+        <!-- Reformat as PC-1500 BASIC (Strip Comments) action -->
+        <action id="SharpBasic.ReformatAsStrippedPC1500"
+                class="ch.erzberger.sharpbasic.formatter.ReformatAsStrippedPC1500Action"
+                text="Reformat as PC-1500 BASIC (Strip Comments)"
+                description="Reformat to PC-1500 canonical format and remove // source comments (device-ready output)">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift D"/>
+        </action>
+
+        <!-- Reformat as Nice PC-1500 BASIC action -->
+        <action id="SharpBasic.ReformatAsNicePC1500"
+                class="ch.erzberger.sharpbasic.formatter.ReformatAsNicePC1500Action"
+                text="Reformat as Nice PC-1500 BASIC"
+                description="Reformat code into human-readable form with spaces around operators and keywords">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift N"/>
         </action>
 
         <!-- Renumber BASIC action -->

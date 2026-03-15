@@ -28,7 +28,6 @@ WHITE_SPACE = [ \t]+
 LINE_NUMBER = [0-9]+
 INTEGER = [0-9]+
 DECIMAL = ([0-9]+ \. [0-9]* | \. [0-9]+)
-HEX_NUMBER = \& [0-9A-Fa-f]+
 SCIENTIFIC = ([0-9]+ (\. [0-9]*)? | \. [0-9]+) [Ee] [+\-]? [0-9]+
 STRING = \"([^\"\r\n]|\"\")*\"
 IDENTIFIER = [A-Za-z][A-Za-z0-9]*[$#]? | "$"
@@ -72,8 +71,41 @@ APOSTROPHE = '
     atLineStart = false;
     return NUMBER;
   }
-  {HEX_NUMBER}            {
+  \&[A-Za-z0-9]+          {
     atLineStart = false;
+    String text = yytext().toString();
+    String rest = text.substring(1).toUpperCase();
+    // Find end of valid hex digits (0-9, A-F)
+    int hexEnd = 0;
+    for (int i = 0; i < rest.length(); i++) {
+      char c = rest.charAt(i);
+      if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')) {
+        hexEnd = i + 1;
+      } else {
+        break;
+      }
+    }
+    // No valid hex digits after &
+    if (hexEnd == 0) {
+      yypushback(rest.length());
+      return BAD_CHARACTER;
+    }
+    // Try progressively shorter hex lengths to find a keyword in the suffix.
+    // This handles e.g. &7FAND (spaces removed) -> NUMBER(&7F) + KEYWORD(AND)
+    for (int len = hexEnd; len >= 1; len--) {
+      String suffix = rest.substring(len);
+      if (suffix.isEmpty()) continue;
+      for (int kwLen = suffix.length(); kwLen >= 2; kwLen--) {
+        if (KEYWORD_REGISTRY.isKeyword(suffix.substring(0, kwLen))) {
+          yypushback(rest.length() - len);
+          return NUMBER;
+        }
+      }
+    }
+    // No keyword found; push back any non-hex trailing chars
+    if (hexEnd < rest.length()) {
+      yypushback(rest.length() - hexEnd);
+    }
     return NUMBER;
   }
   {DECIMAL}               {
@@ -243,7 +275,17 @@ APOSTROPHE = '
   {SEMICOLON}             { atLineStart = false; return SEMICOLON; }
   {COLON}                 { atLineStart = false; return COLON; }
   "&"                     { atLineStart = false; return BAD_CHARACTER; }
-  {HASH}                  { atLineStart = false; return HASH; }
+  // Source-only comment: # at line start (not sent to device, stripped by reformatter)
+  "#"[^\r\n]* {
+    if (atLineStart) {
+      atLineStart = false;
+      return EXTRA_COMMENT;
+    }
+    // # not at line start — push back the rest and return HASH
+    yypushback(yylength() - 1);
+    atLineStart = false;
+    return HASH;
+  }
   "$"                     { atLineStart = false; return IDENTIFIER; }
   "@"                     { atLineStart = false; return AT; }
 }

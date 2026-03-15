@@ -1,0 +1,1 @@
+10 IF &7F AND T GOTO 10

@@ -20,7 +20,7 @@
     IDENTIFIER='regexp:[A-Za-z][A-Za-z0-9]*[$#]?|\$'
     KEYWORD='regexp:[A-Za-z]+\.?'
     COMMENT='regexp:REM[^\r\n]*'
-    EXTRA_COMMENT='regexp://[^\r\n]*'
+    EXTRA_COMMENT='regexp:(//|#)[^\r\n]*'
 
     PLUS='+'
     MINUS='-'
@@ -90,7 +90,7 @@ for_stmt ::= <<isKeyword "FOR">> IDENTIFIER EQ comparison_expr <<isKeyword "TO">
 
 next_stmt ::= <<isKeyword "NEXT">> IDENTIFIER?
 
-if_stmt ::= <<isKeyword "IF">> comparison_expr (<<isKeyword "THEN">> | <<isKeyword "GOTO">>)? (statement | LINE_NUMBER)
+if_stmt ::= <<isKeyword "IF">> logical_expr (<<isKeyword "THEN">> | <<isKeyword "GOTO">>)? (statement | LINE_NUMBER)
 
 goto_stmt ::= <<isKeyword "GOTO">> expression
 
