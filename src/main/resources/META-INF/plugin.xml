@@ -4,7 +4,7 @@
     <vendor email="contact@erzberger.ch" url="https://github.com/erzberger/SharpBasicPlugin">Erzberger</vendor>
 
     <description><![CDATA[
-    <p>Language support for Sharp PC-1500 BASIC, a vintage programming language from the 1980s Sharp pocket computer.</p>
+    <p>Language support for Sharp PC-1500/PC-1600 BASIC, vintage programming languages from the 1980s Sharp pocket computers.</p>
     <p>Features:</p>
     <ul>
         <li>Syntax highlighting for Sharp BASIC keywords, strings, numbers, and comments</li>
@@ -12,6 +12,7 @@
         <li>Support for PC-1500 core commands (97 keywords)</li>
         <li>Support for CE-150 graphics/printer extension (14 keywords)</li>
         <li>Support for CE-158 communications extension (11 keywords)</li>
+        <li>Support for PC-1600 keywords</li>
         <li>File type recognition for .bas and .pc1500 files</li>
     </ul>
     ]]></description>
@@ -68,6 +69,16 @@
             <add-to-group group-id="CodeMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift C"/>
+        </action>
+
+        <!-- Renumber BASIC action -->
+        <action id="SharpBasic.ReformatAsRenumbered"
+                class="ch.erzberger.sharpbasic.formatter.ReformatAsRenumberedAction"
+                text="Renumber BASIC"
+                description="Renumber all BASIC line numbers to a canonical sequence (10, 20, 30, …) and remap all GOTO/GOSUB targets">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift R"/>
         </action>
     </actions>
 </idea-plugin>

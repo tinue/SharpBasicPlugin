@@ -1,6 +1,6 @@
 package ch.erzberger.sharpbasic.lexer;
 
-import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
+import ch.erzberger.sharpbasic.core.keyword.KeywordRegistry;
 import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,9 @@ class InternalWhitespaceTest extends SharpBasicLexerTest {
     @Test
     @DisplayName("KeywordRegistry should not recognize keywords with spaces by default")
     void testKeywordRegistryBehavior() {
-        assertNull(KeywordRegistry.lookup("T I M E"));
-        assertNotNull(KeywordRegistry.lookup("TIME"));
+        KeywordRegistry registry = KeywordRegistry.forPc1500();
+        assertTrue(registry.lookup("T I M E").isEmpty());
+        assertTrue(registry.lookup("TIME").isPresent());
     }
 
     @Test

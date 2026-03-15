@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
     id("java")
     id("org.jetbrains.intellij.platform") version "2.11.0"
@@ -8,6 +10,7 @@ group = properties["pluginGroup"]!!
 version = properties["pluginVersion"]!!
 
 repositories {
+    mavenLocal()
     mavenCentral()
 
     intellijPlatform {
@@ -27,13 +30,20 @@ dependencies {
         create(properties["platformType"] as String, properties["platformVersion"] as String)
 
         // Required dependencies
-        instrumentationTools()
+        testFramework(TestFrameworkType.Platform)
     }
+
+    // Sharp BASIC shared libraries
+    implementation("ch.erzberger.sharpbasic:sharp-basic-core:1.0.0-SNAPSHOT")
+    implementation("ch.erzberger.sharpbasic:sharp-basic-antlr:1.0.0-SNAPSHOT")
+    implementation("org.antlr:antlr4-runtime:4.13.2")
 
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
+    testImplementation("junit:junit:4.13.2")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.1")
 }
 
 // Configure IntelliJ Platform

@@ -3,7 +3,7 @@ package ch.erzberger.sharpbasic.lexer;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import ch.erzberger.sharpbasic.psi.SharpBasicTypes;
-import ch.erzberger.sharpbasic.keywords.KeywordRegistry;
+import ch.erzberger.sharpbasic.core.keyword.KeywordRegistry;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
@@ -19,6 +19,7 @@ import static ch.erzberger.sharpbasic.psi.SharpBasicTypes.*;
 
 %{
   private boolean atLineStart = true;
+  private static final KeywordRegistry KEYWORD_REGISTRY = KeywordRegistry.forPc1500();
 %}
 
 // Token type definitions
@@ -131,7 +132,7 @@ APOSTROPHE = '
     boolean isAllUppercase = textWithoutSuffix.equals(textWithoutSuffix.toUpperCase());
 
     // 1. Exact match (Full keyword or Dotted Abbreviation)
-    if (KeywordRegistry.isKeyword(textUpper)) {
+    if (KEYWORD_REGISTRY.isKeyword(textUpper)) {
       if (textWithoutSuffix.equals(textWithoutSuffix.toUpperCase())) {
         String keywordForRemCheck = hasPeriod ? textUpper.substring(0, textUpper.length() - 1) : textUpper;
         if (keywordForRemCheck.equals("REM")) {
@@ -145,7 +146,7 @@ APOSTROPHE = '
     int maxLen = textUpper.length();
     for (int len = maxLen; len >= 2; len--) {
       String candidate = textUpper.substring(0, len);
-      if (KeywordRegistry.isKeyword(candidate)) {
+      if (KEYWORD_REGISTRY.isKeyword(candidate)) {
          // Skip if it's a keyword prefix followed by a variable suffix (e.g., SG followed by $)
          if ((hasDollar || hasHash) && len == maxLen - 1) {
            continue;
@@ -193,7 +194,7 @@ APOSTROPHE = '
     boolean keywordAt1 = false;
     for (int len = textUpper.length() - 1; len >= 2; len--) {
       String candidate = textUpper.substring(1, 1 + len);
-      if (KeywordRegistry.isKeyword(candidate)) {
+      if (KEYWORD_REGISTRY.isKeyword(candidate)) {
         String originalPrefix = text.substring(1, 1 + len);
         if (originalPrefix.equals(originalPrefix.toUpperCase())) {
           keywordAt1 = true;

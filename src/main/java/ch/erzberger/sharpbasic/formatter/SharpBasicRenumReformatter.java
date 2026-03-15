@@ -3,25 +3,25 @@ package ch.erzberger.sharpbasic.formatter;
 import ch.erzberger.sharpbasic.antlr.SharpBasicLexer;
 import ch.erzberger.sharpbasic.antlr.SharpBasicParser;
 import ch.erzberger.sharpbasic.antlr.SpaceNormalizer;
-import ch.erzberger.sharpbasic.antlr.visitor.ShortTextVisitor;
+import ch.erzberger.sharpbasic.antlr.visitor.RenumNormalizedTextVisitor;
 import ch.erzberger.sharpbasic.core.keyword.KeywordRegistry;
 import ch.erzberger.sharpbasic.core.preprocess.AbbreviationExpander;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 /**
- * Compact reformatter for Sharp BASIC code — minimises code size.
- * Delegates to the ANTLR-based ShortTextVisitor from sharp-basic-antlr.
+ * Renumbers Sharp BASIC line numbers to a canonical sequence.
+ * Delegates to the ANTLR-based RenumNormalizedTextVisitor from sharp-basic-antlr.
  */
-public class SharpBasicCompactReformatter {
+public class SharpBasicRenumReformatter {
 
     private static final KeywordRegistry REGISTRY = KeywordRegistry.forPc1500();
 
     /**
-     * Reformats code to be as compact as possible.
+     * Renumbers the line numbers in the given Sharp BASIC code starting from 10, step 10.
      *
-     * @param code the code to reformat
-     * @return the compacted code
+     * @param code the code to renumber
+     * @return the renumbered code
      */
     public static String reformat(String code) {
         String lineEnding = detectLineEnding(code);
@@ -30,7 +30,7 @@ public class SharpBasicCompactReformatter {
         SharpBasicLexer lexer = new SharpBasicLexer(CharStreams.fromString(normalized));
         SharpBasicParser parser = new SharpBasicParser(new CommonTokenStream(lexer));
         SharpBasicParser.ProgramContext tree = parser.program();
-        String result = new ShortTextVisitor(REGISTRY).visitProgram(tree);
+        String result = new RenumNormalizedTextVisitor().visitProgram(tree);
         return restoreLineEndings(result, lineEnding);
     }
 
