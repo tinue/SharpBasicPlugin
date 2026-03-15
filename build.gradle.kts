@@ -79,7 +79,7 @@ tasks {
     }
 
     buildPlugin {
-        archiveFileName.set("${properties["pluginName"]}.zip")
+        archiveFileName.set("${project.name}.zip")
     }
 
     generateLexer {
