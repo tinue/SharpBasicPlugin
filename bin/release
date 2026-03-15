@@ -20,8 +20,8 @@ TAG="v$VERSION"
 echo "Preparing release for version $VERSION (tag: $TAG)..."
 
 # 2. Extract release notes from CHANGELOG.md
-# Extracts text between ## [VERSION] and the next ##
-NOTES=$(sed -n "/## \[$VERSION\]/,/## /p" CHANGELOG.md | sed '1d;$d')
+# Extracts text between ## [VERSION] and the next ## section header
+NOTES=$(sed -n "/^## $VERSION$/,/^## /p" CHANGELOG.md | sed '1d;$d')
 
 if [ -z "$NOTES" ]; then
     echo "Error: Could not find release notes for version $VERSION in CHANGELOG.md"
@@ -44,7 +44,7 @@ if [ "$IS_PRERELEASE" = true ]; then
     PRERELEASE_FLAG="--prerelease"
 else
     echo "Creating GitHub release..."
-    PRERELEASE_FLAG="--prerelease=false"
+    PRERELEASE_FLAG="--prerelease=false --latest"
 fi
 
 # Check if release already exists

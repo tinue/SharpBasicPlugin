@@ -1,4 +1,4 @@
-## [0.2.0]
+## 0.2.0
 
 ### New features
 - Three additional formatter actions (all in the Code menu and editor right-click menu):
@@ -21,6 +21,6 @@
 - Auto-popup is suppressed while typing; completion no longer inserts keywords unexpectedly when pressing Enter
 - Multi-character prefix matching now works correctly for keyword tokens
 
-## [0.1.0]
+## 0.1.0
 
 First release for testing. While it works locally, this is with my infrastructure and my version of IDEA. Your experience might be different.
