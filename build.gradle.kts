@@ -34,8 +34,8 @@ dependencies {
     }
 
     // Sharp BASIC shared libraries
-    implementation("ch.erzberger.sharpbasic:sharp-basic-core:1.0.0-SNAPSHOT")
-    implementation("ch.erzberger.sharpbasic:sharp-basic-antlr:1.0.0-SNAPSHOT")
+    implementation("ch.erzberger.sharpbasic:sharp-basic-core:1.0.0")
+    implementation("ch.erzberger.sharpbasic:sharp-basic-antlr:1.0.0")
     implementation("org.antlr:antlr4-runtime:4.13.2")
 
     // Test dependencies
@@ -76,6 +76,10 @@ tasks {
 
     test {
         useJUnitPlatform()
+    }
+
+    buildPlugin {
+        archiveFileName.set("${properties["pluginName"]}.zip")
     }
 
     generateLexer {

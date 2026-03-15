@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# Release script for SharpBasicPlugin
+# Uses 'gh' CLI to create a GitHub release or prerelease.
+#
+
+# Stop on error
+set -e
+
+# Parse arguments
+IS_PRERELEASE=true
+if [[ "$1" == "--release" ]]; then
+    IS_PRERELEASE=false
+fi
+
+# 1. Get version from gradle.properties
+VERSION=$(grep "^pluginVersion" gradle.properties | sed -E 's/.*= *//')
+TAG="v$VERSION"
+
+echo "Preparing release for version $VERSION (tag: $TAG)..."
+
+# 2. Extract release notes from CHANGELOG.md
+# Extracts text between ## [VERSION] and the next ##
+NOTES=$(sed -n "/## \[$VERSION\]/,/## /p" CHANGELOG.md | sed '1d;$d')
+
+if [ -z "$NOTES" ]; then
+    echo "Error: Could not find release notes for version $VERSION in CHANGELOG.md"
+    exit 1
+fi
+
+# 3. Clean build
+echo "Building plugin..."
+./gradlew clean buildPlugin
+
+ZIP_FILE="build/distributions/SharpBasicPlugin.zip"
+if [ ! -f "$ZIP_FILE" ]; then
+    echo "Error: Plugin ZIP not found at $ZIP_FILE"
+    exit 1
+fi
+
+# 4. Create/Update Release using gh CLI
+if [ "$IS_PRERELEASE" = true ]; then
+    echo "Creating GitHub prerelease..."
+    PRERELEASE_FLAG="--prerelease"
+else
+    echo "Creating GitHub release..."
+    PRERELEASE_FLAG="--prerelease=false"
+fi
+
+# Check if release already exists
+if gh release view "$TAG" >/dev/null 2>&1; then
+    echo "Updating existing release $TAG..."
+    gh release edit "$TAG" --notes "$NOTES" $PRERELEASE_FLAG
+    gh release upload "$TAG" "$ZIP_FILE" --clobber
+else
+    echo "Creating new release $TAG..."
+    if [ "$IS_PRERELEASE" = true ]; then
+        gh release create "$TAG" "$ZIP_FILE" --title "$TAG" --notes "$NOTES" --prerelease
+    else
+        gh release create "$TAG" "$ZIP_FILE" --title "$TAG" --notes "$NOTES"
+    fi
+fi
+
+echo "Done."

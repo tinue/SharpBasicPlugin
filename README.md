@@ -34,7 +34,7 @@ An IntelliJ IDEA plugin providing language support for Sharp PC-1500 BASIC, a vi
 3. Install the plugin in IntelliJ IDEA:
    - Open IntelliJ IDEA
    - Go to **Settings** → **Plugins** → **⚙️** → **Install Plugin from Disk...**
-   - Select `build/distributions/SharpBasicPlugin-0.1.0-SNAPSHOT.zip`
+   - Select `build/distributions/SharpBasicPlugin.zip`
    - Restart IntelliJ IDEA
 
 ### From JetBrains Marketplace
@@ -236,12 +236,12 @@ cd SharpBasicPlugin
 ```
 SharpBasicPlugin/
 ├── src/main/java/ch/erzberger/sharpbasic/
-│   ├── keywords/          # Keyword definitions and registry
 │   ├── lexer/            # Lexer (tokenization)
 │   ├── parser/           # Parser (syntax analysis)
 │   ├── psi/              # PSI (Program Structure Interface)
 │   ├── syntax/           # Syntax highlighting
-│   └── completion/       # Code completion
+│   ├── completion/       # Code completion
+│   └── formatter/        # Code formatters
 ├── src/main/resources/
 │   ├── META-INF/plugin.xml  # Plugin descriptor
 │   └── icons/            # File type icons
@@ -278,17 +278,7 @@ MIT License - see LICENSE file for details
 
 ## Version History
 
-### 0.1.0-SNAPSHOT (Current)
-- Initial MVP release
-- Syntax highlighting for all 122 keywords
-- Code completion with abbreviations
-- Authentic PC-1500 code formatter with abbreviation expansion
-- Case-sensitive keyword recognition (only all-uppercase)
-- Support for keywords with # suffix (POKE#, PEEK#)
-- Read-only file support (creates scratch files with formatted output)
-- Line ending preservation (LF, CR, CRLF)
-- File type recognition for .bas and .pc1500 files
-- Support for PC-1500, CE-150, and CE-158 keywords
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## Future Enhancements
 

@@ -42,7 +42,7 @@ chmod +x gradlew
 ./gradlew build
 
 # The plugin ZIP will be created in:
-# build/distributions/SharpBasicPlugin-0.1.0-SNAPSHOT.zip
+# build/distributions/SharpBasicPlugin.zip
 ```
 
 ### 3. Run in Sandbox IDE
@@ -158,27 +158,6 @@ Update JAVA_HOME or use a different JDK.
 4. Open an example file from `examples/` directory
 5. Verify syntax highlighting and code completion work correctly
 
-### Adding Keywords
-
-To add new keywords:
-
-1. Edit the appropriate keyword file:
-   - `SharpPc1500Keywords.java` for core keywords
-   - `Ce150Keywords.java` for CE-150 keywords
-   - `Ce158Keywords.java` for CE-158 keywords
-
-2. Add the keyword with proper category and type:
-   ```java
-   keywords.add(new BasicKeyword("NEWCMD", "NEW", 0xXXXX, PC1500_CORE, STATEMENT));
-   ```
-
-3. Rebuild and test
-
-The keyword will automatically be available for:
-- Lexer tokenization (via KeywordRegistry)
-- Syntax highlighting
-- Code completion
-
 ## Project Structure
 
 ```
@@ -189,12 +168,12 @@ SharpBasicPlugin/
 ├── src/main/
 │   ├── java/                  # Java source files
 │   │   └── ch/erzberger/sharpbasic/
-│   │       ├── keywords/      # Keyword definitions
 │   │       ├── lexer/        # Lexer specification
 │   │       ├── parser/       # Parser specification
 │   │       ├── psi/          # PSI elements
 │   │       ├── syntax/       # Syntax highlighting
-│   │       └── completion/   # Code completion
+│   │       ├── completion/   # Code completion
+│   │       └── formatter/    # Code formatters
 │   ├── gen/                   # Generated code (gitignored)
 │   └── resources/            # Plugin resources
 │       ├── META-INF/plugin.xml
