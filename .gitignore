@@ -12,6 +12,9 @@ out/
 # Generated sources
 src/main/gen/
 
+# IntelliJ Platform Gradle plugin
+.intellijPlatform/
+
 # OS
 .DS_Store
 Thumbs.db
